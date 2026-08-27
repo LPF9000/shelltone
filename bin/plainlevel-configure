@@ -1,0 +1,226 @@
+#!/usr/bin/env zsh
+emulate -L zsh
+setopt err_return no_unset
+
+local root=${0:A:h:h}
+local output=${PLAINLEVEL_CONFIG:-$root/config/plainlevel-classic.zsh}
+local preset=interactive
+
+while (( $# )); do
+  case $1 in
+    --output)
+      (( $# >= 2 )) || { print -u2 -- 'plainlevel configure: --output needs a path'; return 2; }
+      output=$2
+      shift 2
+      ;;
+    --preset)
+      (( $# >= 2 )) || { print -u2 -- 'plainlevel configure: --preset needs classic or compact'; return 2; }
+      preset=$2
+      shift 2
+      ;;
+    --help|-h)
+      print -- 'usage: plainlevel configure [--preset classic|compact] [--output FILE]'
+      return
+      ;;
+    *)
+      print -u2 -- "plainlevel configure: unknown option: $1"
+      return 2
+      ;;
+  esac
+done
+
+local two_lines=true add_newline=true show_time=true time_format='%I:%M:%S %p'
+local show_context=auto duration=3 max_dir=38
+
+function _plainlevel_configure_clear() {
+  print -n -- $'\e[2J\e[H'
+}
+
+function _plainlevel_configure_choice() {
+  local allowed=$1 prompt=$2
+  while true; do
+    read -rk1 "answer?$prompt"
+    print
+    [[ $allowed == *$answer* ]] && return 0
+  done
+}
+
+function _plainlevel_configure_preview() {
+  local height=${1:-2} clock=${2:-12} failed=${3:-false}
+  local reset=$'\e[0m' frame=$'\e[38;5;240m' bar=$'\e[48;5;236m'
+  local blue=$'\e[38;5;39;1m' fade=$'\e[38;5;236m' divider=$'\e[38;5;244m'
+  local duration_color=$'\e[38;5;248m' time_color=$'\e[38;5;66m'
+  local status_text status_color clock_text clock_segment=''
+  if [[ $failed == true ]]; then
+    status_text=' ✘ 127 '
+    status_color=$'\e[38;5;160m'
+  else
+    status_text=' ✔ '
+    status_color=$'\e[38;5;70m'
+  fi
+  case $clock in
+    12) clock_text=' 09:41:27 PM ' ;;
+    24) clock_text=' 21:41:27 ' ;;
+    *)  clock_text='' ;;
+  esac
+  [[ -n $clock_text ]] && clock_segment="${divider}◁${time_color}${clock_text}"
+
+  if [[ $height == 2 ]]; then
+    print -r -- "${frame}╭─${reset}${bar}${blue} ~/projects/demo ${reset}${fade}▓▒░${reset}     ${fade}░▒▓${bar}${status_color}${status_text}${divider}◁${duration_color} 4s ${clock_segment}${reset}"
+    print -r -- "${frame}╰─${reset} ${status_color}>${reset} echo hello"
+  else
+    print -r -- "${bar}${blue} ~/projects/demo ${reset}${fade}▓▒░${reset} ${status_color}>${reset} echo hello     ${fade}░▒▓${bar}${status_color}${status_text}${divider}◁${duration_color} 4s ${clock_segment}${reset}"
+  fi
+}
+
+if [[ $preset == compact ]]; then
+  two_lines=false
+  add_newline=false
+  show_time=false
+elif [[ $preset == classic ]]; then
+  :
+elif [[ $preset == interactive ]]; then
+  [[ -t 0 ]] || {
+    print -u2 -- 'plainlevel configure: interactive mode needs a terminal; use --preset classic or compact'
+    return 2
+  }
+  local answer preview_height=2 preview_clock=12
+  _plainlevel_configure_clear
+  print -P '%F{blue}%BPlainlevel10k configuration wizard%b%f'
+  print
+  print -- 'This wizard will show each choice before changing your sandbox prompt.'
+  print -- 'It uses standard Unicode only; no Nerd Font or Powerline font is required.'
+  print
+  print -- 'Frame:  ╭─  ╰─'
+  print -- 'Fades:  ▓▒░  ░▒▓'
+  print -- 'Status: ✔   ✘'
+  print
+  _plainlevel_configure_choice ynq 'Do these characters look clean and aligned? [y/n/q] '
+  [[ $answer == q ]] && return 130
+  if [[ $answer == n ]]; then
+    print
+    print -- 'These are ordinary Unicode characters, but this terminal font does not render them cleanly.'
+    print -- 'No configuration was changed. Choose another already-installed Unicode-capable font and retry.'
+    return 1
+  fi
+
+  _plainlevel_configure_clear
+  print -P '%BPrompt Height%b'
+  print
+  print -P '%B(1) One line%b'
+  _plainlevel_configure_preview 1 12
+  print
+  print -P '%B(2) Two lines%b'
+  _plainlevel_configure_preview 2 12
+  print
+  _plainlevel_configure_choice 12q 'Choice [1/2/q]: '
+  [[ $answer == q ]] && return 130
+  [[ $answer == 1 ]] && two_lines=false || two_lines=true
+  [[ $two_lines == true ]] && preview_height=2 || preview_height=1
+
+  _plainlevel_configure_clear
+  print -P '%BPrompt Spacing%b'
+  print
+  print -P '%B(1) Compact%b'
+  _plainlevel_configure_preview $preview_height 12
+  print
+  print -P '%B(2) Sparse%b'
+  print
+  _plainlevel_configure_preview $preview_height 12
+  print
+  _plainlevel_configure_choice 12q 'Choice [1/2/q]: '
+  [[ $answer == q ]] && return 130
+  [[ $answer == 1 ]] && add_newline=false || add_newline=true
+
+  _plainlevel_configure_clear
+  print -P '%BShow Current Time?%b'
+  print
+  print -P '%B(n) No clock%b'
+  _plainlevel_configure_preview $preview_height none
+  print
+  print -P '%B(1) 12-hour clock%b'
+  _plainlevel_configure_preview $preview_height 12
+  print
+  print -P '%B(2) 24-hour clock%b'
+  _plainlevel_configure_preview $preview_height 24
+  print
+  _plainlevel_configure_choice n12q 'Choice [n/1/2/q]: '
+  [[ $answer == q ]] && return 130
+  case $answer in
+    n) show_time=false; preview_clock=none ;;
+    1) show_time=true; time_format='%I:%M:%S %p'; preview_clock=12 ;;
+    2) show_time=true; time_format='%H:%M:%S'; preview_clock=24 ;;
+  esac
+
+  _plainlevel_configure_clear
+  print -P '%BFinal Preview%b'
+  print
+  [[ $add_newline == true ]] && print
+  _plainlevel_configure_preview $preview_height $preview_clock
+  print
+  print -- 'Command-not-found example:'
+  _plainlevel_configure_preview $preview_height $preview_clock true
+  print
+  _plainlevel_configure_choice yq 'Save this configuration? [y/q] '
+  [[ $answer == q ]] && return 130
+else
+  print -u2 -- "plainlevel configure: unknown preset: $preset"
+  return 2
+fi
+
+local parent=${output:h}
+mkdir -p -- "$parent"
+local temporary="${output}.new.$$"
+{
+  print -r -- '# Generated by `plainlevel configure`. Safe with unpatched, ordinary fonts.'
+  print -r -- "typeset -g PLAINLEVEL_STYLE=classic"
+  print -r -- "typeset -g PLAINLEVEL_COLOR_DEPTH=256"
+  print -r -- "typeset -g PLAINLEVEL_TWO_LINES=$two_lines"
+  print -r -- "typeset -g PLAINLEVEL_ADD_NEWLINE=$add_newline"
+  print -r -- "typeset -g PLAINLEVEL_SHOW_TIME=$show_time"
+  print -r -- "typeset -g PLAINLEVEL_TIME_FORMAT='${time_format}'"
+  print -r -- "typeset -g PLAINLEVEL_SHOW_CONTEXT=$show_context"
+  print -r -- 'typeset -g PLAINLEVEL_SHOW_VENV=true'
+  print -r -- 'typeset -g PLAINLEVEL_SHOW_OS=false'
+  print -r -- "typeset -g PLAINLEVEL_DURATION_THRESHOLD=$duration"
+  print -r -- "typeset -g PLAINLEVEL_MAX_DIR_LENGTH=$max_dir"
+  print -r -- 'typeset -g PLAINLEVEL_FRAME_COLOR=240'
+  print -r -- 'typeset -g PLAINLEVEL_SEPARATOR_FG=244'
+  print -r -- "typeset -g PLAINLEVEL_RIGHT_SEPARATOR='◁'"
+  print -r -- 'typeset -g PLAINLEVEL_FADE_FG=236'
+  print -r -- 'typeset -g PLAINLEVEL_OS_BG=236'
+  print -r -- 'typeset -g PLAINLEVEL_OS_FG=255'
+  print -r -- 'typeset -g PLAINLEVEL_DIR_BG=236'
+  print -r -- 'typeset -g PLAINLEVEL_DIR_FG=39'
+  print -r -- 'typeset -g PLAINLEVEL_DIR_BOLD=true'
+  print -r -- "typeset -g PLAINLEVEL_HOME_ICON='🏠︎'"
+  print -r -- 'typeset -g PLAINLEVEL_HOME_ICON_WIDTH=2'
+  print -r -- 'typeset -g PLAINLEVEL_HOME_ICON_FG=39'
+  print -r -- "typeset -g PLAINLEVEL_HOME_SUB_ICON='🗁'"
+  print -r -- 'typeset -g PLAINLEVEL_HOME_SUB_ICON_WIDTH=2'
+  print -r -- 'typeset -g PLAINLEVEL_HOME_SUB_ICON_FG=39'
+  print -r -- "typeset -g PLAINLEVEL_FOLDER_ICON='🗁'"
+  print -r -- 'typeset -g PLAINLEVEL_FOLDER_ICON_WIDTH=2'
+  print -r -- 'typeset -g PLAINLEVEL_FOLDER_ICON_FG=39'
+  print -r -- "typeset -g PLAINLEVEL_DIR_ICON_GAP='   '"
+  print -r -- 'typeset -g PLAINLEVEL_GIT_CLEAN_BG=236'
+  print -r -- 'typeset -g PLAINLEVEL_GIT_CLEAN_FG=76'
+  print -r -- 'typeset -g PLAINLEVEL_GIT_DIRTY_BG=236'
+  print -r -- 'typeset -g PLAINLEVEL_GIT_DIRTY_FG=178'
+  print -r -- "typeset -g PLAINLEVEL_GIT_ICON='⎇'"
+  print -r -- 'typeset -g PLAINLEVEL_SHOW_DIR_ICONS=false'
+  print -r -- 'typeset -g PLAINLEVEL_SHOW_GIT_ICON=true'
+  print -r -- 'typeset -g PLAINLEVEL_INFO_BG=236'
+  print -r -- 'typeset -g PLAINLEVEL_INFO_FG=39'
+  print -r -- 'typeset -g PLAINLEVEL_DURATION_FG=248'
+  print -r -- 'typeset -g PLAINLEVEL_TIME_FG=66'
+  print -r -- 'typeset -g PLAINLEVEL_STATUS_BG=236'
+  print -r -- 'typeset -g PLAINLEVEL_STATUS_OK_FG=70'
+  print -r -- 'typeset -g PLAINLEVEL_STATUS_ERROR_FG=160'
+} >| "$temporary"
+mv -f -- "$temporary" "$output"
+print -r -- "Wrote $output"
+if [[ $preset == interactive ]]; then
+  print -r -- 'Run `plainlevel reload` to apply it now.'
+fi
+true

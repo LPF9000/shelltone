@@ -1,0 +1,26 @@
+#!/usr/bin/env zsh
+emulate -L zsh
+setopt err_exit no_unset
+
+local root=${0:A:h:h}
+local zdot
+zdot=$(mktemp -d ${TMPDIR:-/tmp}/plainlevel-zdot.XXXXXX)
+function cleanup_plainlevel_zdot() {
+  rm -rf -- "$zdot"
+}
+trap 'cleanup_plainlevel_zdot; exit 130' HUP INT TERM
+
+# Zsh requires this conventional filename. It exists only in the temporary directory
+# for the lifetime of the sandbox; the maintained startup file has a distinct name.
+ln -s "$root/plainlevel-sandbox.zsh" "$zdot/.zshrc"
+
+setopt no_err_exit
+PLAINLEVEL_THEME="$root/plainlevel.zsh" \
+PLAINLEVEL_ROOT="$root" \
+PLAINLEVEL_CONFIG="${PLAINLEVEL_CONFIG:-$root/config/plainlevel-classic.zsh}" \
+PLAINLEVEL_SANDBOX_HISTORY="$zdot/history" \
+ZDOTDIR="$zdot" \
+zsh -d -i
+local child_status=$?
+cleanup_plainlevel_zdot
+exit $child_status
