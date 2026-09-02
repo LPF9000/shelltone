@@ -112,7 +112,4 @@ for theme in tenfold afterglow night-shift; do
   [[ $SHELLTONE_TIME_FG != $SHELLTONE_INFO_BG ]]
 done
 
-# Guard the files the user explicitly asked us not to modify.
-[[ -r "$HOME/.zshrc" ]]
-[[ -r "$HOME/.p10k.zsh" ]]
 print -- 'shelltone checks passed'

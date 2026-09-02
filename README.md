@@ -8,6 +8,8 @@
 
 # Shelltone
 
+[![Checks](https://github.com/LPF9000/shelltone/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/shelltone/actions/workflows/ci.yml)
+
 Shelltone is a dependency-free Zsh prompt with a little bit of retro glow and none of the usual font ceremony. It is for people who want a useful prompt—not a dashboard bolted to their shell. No Nerd Font, no Powerline glyphs, no plugin manager, and no framework required.
 
 It keeps the good parts close: the directory and Git branch on the left; command result, duration, jobs, environment, remote context, and clock on the right. When the terminal gets narrow, it quietly drops right-side details instead of wrapping your prompt into a mess.
