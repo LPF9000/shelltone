@@ -1,0 +1,22 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Zsh checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Zsh is available
+        run: zsh --version
+      - name: Run checks
+        run: zsh ./tests/check.zsh
