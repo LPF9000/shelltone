@@ -16,4 +16,8 @@ The setup wizard begins with these choices, previews the selected palette, then 
 - **Harbor** — quiet sea-glass colors and a calm single-line default.
 - **Sunset Strip** — warm terminal glow with a deliberately minimal right prompt.
 
+## Artwork follow-up
+
+The current README banner deliberately uses the original full-color PNG. The first SVG experiment retained the letter shapes but flattened the cyan, red, cream, gradient, and scanline treatment into one color, so it is not suitable as the project mark. Revisit vector artwork only with a workflow that preserves those color layers and effects; until then, the PNG is the canonical banner.
+
 Before a new theme lands, it needs a distinct palette, a compact and two-line preview, and a configuration path that works without a custom font. The names can nod to the prompt culture that inspired the look, but the design and implementation remain Shelltone's own.

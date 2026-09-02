@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/shelltone-banner.svg" alt="Shelltone" width="800">
+  <img src="./assets/shelltone-banner.png" alt="Shelltone" width="800">
 </p>
 
 <p align="center">

@@ -27,11 +27,11 @@ _plainlevel_set_prompt
 [[ $PROMPT == *'✘ 7'* ]]
 [[ $PROMPT == *'4s'* ]]
 [[ $PROMPT == *'riscv_pim 🐍'* ]]
-[[ $PROMPT == *$'\e[38;5;39m'* ]]
+[[ $PROMPT == *$'\e[38;5;'${PLAINLEVEL_DIR_FG}m* ]]
 [[ $PROMPT == *"${_plainlevel_bold}~/plainlevel10k${_plainlevel_bold_reset}"* ]]
-[[ $PROMPT == *$'\e[38;5;248m'* ]]
-[[ $PROMPT == *$'\e[38;5;66m'* ]]
-[[ $PROMPT == *"${_plainlevel_bg}236m%}${_plainlevel_fg}244m%}·"* ]]
+[[ $PROMPT == *$'\e[38;5;'${PLAINLEVEL_DURATION_FG}m* ]]
+[[ $PROMPT == *$'\e[38;5;'${PLAINLEVEL_TIME_FG}m* ]]
+[[ $PROMPT == *"${_plainlevel_bg}${PLAINLEVEL_INFO_BG}m%}${_plainlevel_fg}${PLAINLEVEL_SEPARATOR_FG}m%}·"* ]]
 [[ $PROMPT == *'╭─'* ]]
 [[ $PROMPT == *'╰─'* ]]
 [[ $PROMPT == *'▓▒░'* ]]
@@ -64,7 +64,7 @@ cd "$git_scratch"
 _plainlevel_directory
 [[ $REPLY == "$git_scratch" ]]
 _plainlevel_git
-[[ $reply[2] == 76 ]]
+[[ $reply[2] == $PLAINLEVEL_GIT_CLEAN_FG ]]
 [[ $reply[3] == '⎇  '* ]]
 [[ $reply[3] != *'GH'* ]]
 cd "$previous_directory"
