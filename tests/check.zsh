@@ -4,34 +4,35 @@ setopt err_exit no_unset pipe_fail
 
 local root=${0:A:h:h}
 local scratch
-scratch=$(mktemp -d ${TMPDIR:-/tmp}/plainlevel-test.XXXXXX)
+scratch=$(mktemp -d ${TMPDIR:-/tmp}/shelltone-test.XXXXXX)
 trap 'rm -rf -- "$scratch"' EXIT
 
-for file in "$root/plainlevel.zsh" "$root/plainlevel-sandbox.zsh" "$root/plainlevel-aliases.zsh" \
-            "$root/bin/plainlevel" \
-            "$root/bin/plainlevel-configure" "$root/bin/try-plainlevel"; do
+for file in "$root/shelltone.zsh" "$root/shelltone-sandbox.zsh" "$root/shelltone-aliases.zsh" \
+            "$root/bin/shelltone" \
+            "$root/bin/shelltone-configure" "$root/bin/try-shelltone"; do
   zsh -n "$file"
 done
 
-PLAINLEVEL_CONFIG="$root/config/plainlevel-classic.zsh" source "$root/plainlevel.zsh"
-source "$root/plainlevel-aliases.zsh"
+SHELLTONE_CONFIG="$root/config/shelltone-classic.zsh" source "$root/shelltone.zsh"
+source "$root/shelltone-aliases.zsh"
 [[ "$(alias la)" == "la='ls -l -A --color=always'" ]]
 [[ "$(alias ll)" == "ll='ls -l --color=always'" ]]
 VIRTUAL_ENV=/tmp/riscv_pim/.venv
-_plainlevel_last_status=7
-_plainlevel_command_elapsed=4
+_shelltone_last_status=7
+_shelltone_command_elapsed=4
 COLUMNS=120
-_plainlevel_set_prompt
+_shelltone_set_prompt
+local prompt_directory="~/${PWD#$HOME/}"
 [[ $PROMPT != *'LINUX'* ]]
 [[ $PROMPT != *'node '* ]]
 [[ $PROMPT == *'✘ 7'* ]]
 [[ $PROMPT == *'4s'* ]]
 [[ $PROMPT == *'riscv_pim 🐍'* ]]
-[[ $PROMPT == *$'\e[38;5;'${PLAINLEVEL_DIR_FG}m* ]]
-[[ $PROMPT == *"${_plainlevel_bold}~/plainlevel10k${_plainlevel_bold_reset}"* ]]
-[[ $PROMPT == *$'\e[38;5;'${PLAINLEVEL_DURATION_FG}m* ]]
-[[ $PROMPT == *$'\e[38;5;'${PLAINLEVEL_TIME_FG}m* ]]
-[[ $PROMPT == *"${_plainlevel_bg}${PLAINLEVEL_INFO_BG}m%}${_plainlevel_fg}${PLAINLEVEL_SEPARATOR_FG}m%}·"* ]]
+[[ $PROMPT == *$'\e[38;5;'${SHELLTONE_DIR_FG}m* ]]
+[[ $PROMPT == *"${_shelltone_bold}${prompt_directory}${_shelltone_bold_reset}"* ]]
+[[ $PROMPT == *$'\e[38;5;'${SHELLTONE_DURATION_FG}m* ]]
+[[ $PROMPT == *$'\e[38;5;'${SHELLTONE_TIME_FG}m* ]]
+[[ $PROMPT == *"${_shelltone_bg}${SHELLTONE_INFO_BG}m%}${_shelltone_fg}${SHELLTONE_SEPARATOR_FG}m%}·"* ]]
 [[ $PROMPT == *'╭─'* ]]
 [[ $PROMPT == *'╰─'* ]]
 [[ $PROMPT == *'▓▒░'* ]]
@@ -39,77 +40,79 @@ _plainlevel_set_prompt
 [[ $PROMPT != *$'\ue0b0'* ]]
 [[ $PROMPT != *$'\uf000'* ]]
 
-COLUMNS=45
-_plainlevel_set_prompt
-[[ $PROMPT == *'✘ 7'* ]]
+COLUMNS=60
+_shelltone_set_prompt
 [[ $PROMPT != *' AM'* ]]
 
-_plainlevel_last_status=0
+_shelltone_last_status=0
 COLUMNS=120
-_plainlevel_set_prompt
+_shelltone_set_prompt
 [[ $PROMPT == *'✔'* ]]
 [[ $PROMPT != *'✘'* ]]
 
 local previous_directory=$PWD
 cd "$HOME"
-_plainlevel_set_prompt
-[[ $PROMPT == *"${_plainlevel_bold}~${_plainlevel_bold_reset}"* ]]
+_shelltone_set_prompt
+[[ $PROMPT == *"${_shelltone_bold}~${_shelltone_bold_reset}"* ]]
 [[ $PROMPT != *'/home/ryanlaur'* ]]
 cd "$previous_directory"
 
 local git_scratch="$scratch/git-icons"
 command git init -q "$git_scratch"
-command git -C "$git_scratch" remote add origin git@github.com:plainlevel/demo.git
+command git -C "$git_scratch" remote add origin git@github.com:shelltone/demo.git
 cd "$git_scratch"
-_plainlevel_directory
+_shelltone_directory
 [[ $REPLY == "$git_scratch" ]]
-_plainlevel_git
-[[ $reply[2] == $PLAINLEVEL_GIT_CLEAN_FG ]]
+_shelltone_git
+[[ $reply[2] == $SHELLTONE_GIT_CLEAN_FG ]]
 [[ $reply[3] == '⎇  '* ]]
 [[ $reply[3] != *'GH'* ]]
 cd "$previous_directory"
 
 local generated="$scratch/generated.zsh"
-"$root/bin/plainlevel-configure" --preset compact --output "$generated" >/dev/null
+"$root/bin/shelltone-configure" --preset compact --output "$generated" >/dev/null
 zsh -n "$generated"
 source "$generated"
-[[ $PLAINLEVEL_TWO_LINES == false ]]
-[[ $PLAINLEVEL_ADD_NEWLINE == false ]]
-[[ $PLAINLEVEL_SHOW_TIME == false ]]
-[[ $PLAINLEVEL_SHOW_OS == false ]]
-[[ $PLAINLEVEL_DIR_BG == 236 ]]
-[[ $PLAINLEVEL_DIR_FG == 39 ]]
-[[ $PLAINLEVEL_DIR_BOLD == true ]]
-[[ $PLAINLEVEL_HOME_ICON == '🏠︎' ]]
-[[ $PLAINLEVEL_HOME_ICON_FG == 39 ]]
-[[ $PLAINLEVEL_HOME_SUB_ICON == '🗁' ]]
-[[ $PLAINLEVEL_FOLDER_ICON == '🗁' ]]
-[[ $PLAINLEVEL_DIR_ICON_GAP == '   ' ]]
-[[ $PLAINLEVEL_SHOW_DIR_ICONS == false ]]
-[[ $PLAINLEVEL_SHOW_GIT_ICON == true ]]
-[[ $PLAINLEVEL_GIT_CLEAN_FG == 76 ]]
-[[ $PLAINLEVEL_GIT_ICON == '⎇' ]]
-[[ $PLAINLEVEL_DURATION_FG == 248 ]]
-[[ $PLAINLEVEL_TIME_FG == 66 ]]
-[[ $PLAINLEVEL_RIGHT_SEPARATOR == '·' ]]
-[[ $PLAINLEVEL_VENV_ICON == '🐍' ]]
+[[ $SHELLTONE_TWO_LINES == false ]]
+[[ $SHELLTONE_ADD_NEWLINE == false ]]
+[[ $SHELLTONE_SHOW_TIME == false ]]
+[[ $SHELLTONE_SHOW_OS == false ]]
+[[ $SHELLTONE_DIR_BG == 236 ]]
+[[ $SHELLTONE_DIR_FG == 39 ]]
+[[ $SHELLTONE_DIR_BOLD == true ]]
+[[ $SHELLTONE_HOME_ICON == '🏠︎' ]]
+[[ $SHELLTONE_HOME_ICON_FG == 39 ]]
+[[ $SHELLTONE_HOME_SUB_ICON == '🗁' ]]
+[[ $SHELLTONE_FOLDER_ICON == '🗁' ]]
+[[ $SHELLTONE_DIR_ICON_GAP == '   ' ]]
+[[ $SHELLTONE_SHOW_DIR_ICONS == false ]]
+[[ $SHELLTONE_SHOW_GIT_ICON == true ]]
+[[ $SHELLTONE_GIT_CLEAN_FG == 81 ]]
+[[ $SHELLTONE_GIT_ICON == '⎇' ]]
+[[ $SHELLTONE_DURATION_FG == 248 ]]
+[[ $SHELLTONE_TIME_FG == 66 ]]
+[[ $SHELLTONE_RIGHT_SEPARATOR == '·' ]]
+[[ $SHELLTONE_VENV_ICON == '🐍' ]]
 
 for theme in tenfold afterglow night-shift; do
   "$root/bin/shelltone" configure --theme "$theme" --preset compact --output "$generated" >/dev/null
   source "$generated"
-  [[ $PLAINLEVEL_STYLE == "$theme" ]]
-  [[ $PLAINLEVEL_OS_BG == $PLAINLEVEL_DIR_BG ]]
-  [[ $PLAINLEVEL_DIR_BG == $PLAINLEVEL_GIT_CLEAN_BG ]]
-  [[ $PLAINLEVEL_DIR_BG == $PLAINLEVEL_GIT_DIRTY_BG ]]
-  [[ $PLAINLEVEL_DIR_BG == $PLAINLEVEL_INFO_BG ]]
-  [[ $PLAINLEVEL_DIR_BG == $PLAINLEVEL_STATUS_BG ]]
-  [[ $PLAINLEVEL_DIR_FG != $PLAINLEVEL_DIR_BG ]]
-  [[ $PLAINLEVEL_GIT_CLEAN_FG != $PLAINLEVEL_GIT_CLEAN_BG ]]
-  [[ $PLAINLEVEL_GIT_DIRTY_FG != $PLAINLEVEL_GIT_DIRTY_BG ]]
-  [[ $PLAINLEVEL_TIME_FG != $PLAINLEVEL_INFO_BG ]]
+  [[ $SHELLTONE_STYLE == "$theme" ]]
+  [[ $SHELLTONE_OS_BG == $SHELLTONE_DIR_BG ]]
+  [[ $SHELLTONE_DIR_BG == $SHELLTONE_GIT_CLEAN_BG ]]
+  [[ $SHELLTONE_DIR_BG == $SHELLTONE_GIT_DIRTY_BG ]]
+  [[ $SHELLTONE_DIR_BG == $SHELLTONE_INFO_BG ]]
+  [[ $SHELLTONE_DIR_BG == $SHELLTONE_STATUS_BG ]]
+  [[ $SHELLTONE_DIR_FG != $SHELLTONE_DIR_BG ]]
+  [[ $SHELLTONE_GIT_CLEAN_FG != $SHELLTONE_GIT_CLEAN_BG ]]
+  [[ $SHELLTONE_GIT_DIRTY_FG != $SHELLTONE_GIT_DIRTY_BG ]]
+  [[ $SHELLTONE_GIT_CLEAN_FG != $SHELLTONE_DIR_FG ]]
+  [[ $SHELLTONE_GIT_DIRTY_FG != $SHELLTONE_DIR_FG ]]
+  [[ $SHELLTONE_GIT_CLEAN_FG != $SHELLTONE_GIT_DIRTY_FG ]]
+  [[ $SHELLTONE_TIME_FG != $SHELLTONE_INFO_BG ]]
 done
 
 # Guard the files the user explicitly asked us not to modify.
 [[ -r "$HOME/.zshrc" ]]
 [[ -r "$HOME/.p10k.zsh" ]]
-print -- 'plainlevel checks passed'
+print -- 'shelltone checks passed'

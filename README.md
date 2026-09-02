@@ -26,7 +26,7 @@ Start with **Tenfold**, **Afterglow**, or **Night Shift**. Each has its own pale
 Clone the repository, then run:
 
 ```zsh
-./bin/try-plainlevel
+./bin/try-shelltone
 ```
 
 That opens a child Zsh with a disposable `ZDOTDIR`. It does not read or alter `~/.zshrc`, does not load your usual Zsh configuration, and does not replace it. Type `exit` when you are done; the temporary startup directory and its history go away with it.
@@ -49,7 +49,7 @@ It previews prompt height, spacing, clock format, and success/failure status bef
 ./bin/shelltone configure --theme night-shift --preset compact
 ```
 
-By default this writes `config/plainlevel-classic.zsh`; pass `--output FILE` to keep a separate config. The settings are deliberately boring Zsh variables and 256-color values, which makes new themes easy to add, copy, and tune without learning a mini language.
+By default this writes `config/shelltone-classic.zsh`; pass `--output FILE` to keep a separate config. The settings are deliberately boring Zsh variables and 256-color values, which makes new themes easy to add, copy, and tune without learning a mini language.
 
 ## Themes, without bloat
 
@@ -57,13 +57,13 @@ Shelltone starts setup with a theme picker, then walks through that theme's layo
 
 ## What is in here
 
-- `plainlevel.zsh` — the small prompt engine behind the `shelltone` command.
-- `config/plainlevel-classic.zsh` — the editable default theme configuration.
-- `plainlevel-sandbox.zsh` — the isolated child-shell startup logic.
-- `plainlevel-aliases.zsh` — sandbox-only conveniences.
-- `bin/try-plainlevel` — safe preview launcher.
+- `shelltone.zsh` — the small prompt engine behind the `shelltone` command.
+- `config/shelltone-classic.zsh` — the editable default theme configuration.
+- `shelltone-sandbox.zsh` — the isolated child-shell startup logic.
+- `shelltone-aliases.zsh` — sandbox-only conveniences.
+- `bin/try-shelltone` — safe preview launcher.
 - `bin/shelltone` — the public Shelltone command.
-- `bin/plainlevel-configure` — configuration wizard and presets.
+- `bin/shelltone-configure` — configuration wizard and presets.
 - `tests/check.zsh` — syntax and behavior smoke checks.
 
 Run the checks with:
@@ -72,4 +72,4 @@ Run the checks with:
 ./tests/check.zsh
 ```
 
-The older filenames and `plainlevel` command are kept only as a quiet compatibility layer for existing local setups. New instructions and new configurations use Shelltone.
+The older filenames and `shelltone` command are kept only as a quiet compatibility layer for existing local setups. New instructions and new configurations use Shelltone.
