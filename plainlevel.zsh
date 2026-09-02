@@ -1,4 +1,4 @@
-# Plainlevel10k -- a Powerlevel10k-inspired prompt made from ordinary characters.
+# Shelltone prompt engine. Uses ordinary terminal characters and no custom font.
 # Source this file from zsh. It has no dependencies and does not require a patched font.
 
 [[ -n ${ZSH_VERSION-} ]] || return 1
@@ -18,12 +18,13 @@ typeset -g PLAINLEVEL_VERSION=0.1.0
 : ${PLAINLEVEL_TIME_FORMAT:=%I:%M:%S %p}
 : ${PLAINLEVEL_SHOW_CONTEXT:=auto}
 : ${PLAINLEVEL_SHOW_VENV:=true}
+: ${PLAINLEVEL_VENV_ICON:=🐍}
 : ${PLAINLEVEL_SHOW_OS:=false}
 : ${PLAINLEVEL_DURATION_THRESHOLD:=3}
 : ${PLAINLEVEL_MAX_DIR_LENGTH:=38}
 : ${PLAINLEVEL_FRAME_COLOR:=240}
 : ${PLAINLEVEL_SEPARATOR_FG:=244}
-: ${PLAINLEVEL_RIGHT_SEPARATOR:=◁}
+: ${PLAINLEVEL_RIGHT_SEPARATOR:=·}
 : ${PLAINLEVEL_FADE_FG:=236}
 : ${PLAINLEVEL_OS_BG:=236}
 : ${PLAINLEVEL_OS_FG:=255}
@@ -275,7 +276,8 @@ function _plainlevel_build_parts() {
 
   if _plainlevel_bool "$PLAINLEVEL_SHOW_VENV"; then
     if [[ -n ${VIRTUAL_ENV-} ]]; then
-      _plainlevel_add_right $PLAINLEVEL_INFO_BG $PLAINLEVEL_INFO_FG "py ${VIRTUAL_ENV:t}"
+      local venv_name=${VIRTUAL_ENV:h:t}
+      _plainlevel_add_right $PLAINLEVEL_INFO_BG $PLAINLEVEL_INFO_FG "${venv_name} ${PLAINLEVEL_VENV_ICON}"
     elif [[ -n ${CONDA_DEFAULT_ENV-} ]]; then
       _plainlevel_add_right $PLAINLEVEL_INFO_BG $PLAINLEVEL_INFO_FG "conda ${CONDA_DEFAULT_ENV}"
     fi
@@ -300,7 +302,7 @@ function _plainlevel_set_prompt() {
   right_width=$REPLY
 
   # Drop the least important rightmost segments on narrow terminals, just as
-  # Powerlevel10k avoids letting right-prompt details collide with the left side.
+  # Keep right-prompt details from colliding with the left side.
   while (( ${#_plainlevel_right_parts} && left_width + right_width + 9 > COLUMNS )); do
     _plainlevel_right_parts[-3,-1]=()
     _plainlevel_parts_width _plainlevel_right_parts
@@ -373,6 +375,12 @@ function plainlevel() {
       return 2
       ;;
   esac
+}
+
+# Shelltone is the public command. Keep `plainlevel` above for existing setups.
+function shelltone() {
+  (( $# )) || set -- configure
+  plainlevel "$@"
 }
 
 if [[ -o interactive ]]; then

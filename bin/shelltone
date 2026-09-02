@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+emulate -L zsh
+setopt no_unset
+typeset -g PLAINLEVEL_ROOT=${0:A:h:h}
+source "$PLAINLEVEL_ROOT/plainlevel.zsh"
+shelltone "$@"

@@ -7,12 +7,17 @@ local scratch
 scratch=$(mktemp -d ${TMPDIR:-/tmp}/plainlevel-test.XXXXXX)
 trap 'rm -rf -- "$scratch"' EXIT
 
-for file in "$root/plainlevel.zsh" "$root/plainlevel-sandbox.zsh" "$root/bin/plainlevel" \
+for file in "$root/plainlevel.zsh" "$root/plainlevel-sandbox.zsh" "$root/plainlevel-aliases.zsh" \
+            "$root/bin/plainlevel" \
             "$root/bin/plainlevel-configure" "$root/bin/try-plainlevel"; do
   zsh -n "$file"
 done
 
 PLAINLEVEL_CONFIG="$root/config/plainlevel-classic.zsh" source "$root/plainlevel.zsh"
+source "$root/plainlevel-aliases.zsh"
+[[ "$(alias la)" == "la='ls -l -A --color=always'" ]]
+[[ "$(alias ll)" == "ll='ls -l --color=always'" ]]
+VIRTUAL_ENV=/tmp/riscv_pim/.venv
 _plainlevel_last_status=7
 _plainlevel_command_elapsed=4
 COLUMNS=120
@@ -21,11 +26,12 @@ _plainlevel_set_prompt
 [[ $PROMPT != *'node '* ]]
 [[ $PROMPT == *'✘ 7'* ]]
 [[ $PROMPT == *'4s'* ]]
+[[ $PROMPT == *'riscv_pim 🐍'* ]]
 [[ $PROMPT == *$'\e[38;5;39m'* ]]
 [[ $PROMPT == *"${_plainlevel_bold}~/plainlevel10k${_plainlevel_bold_reset}"* ]]
 [[ $PROMPT == *$'\e[38;5;248m'* ]]
 [[ $PROMPT == *$'\e[38;5;66m'* ]]
-[[ $PROMPT == *"${_plainlevel_bg}236m%}${_plainlevel_fg}244m%}◁"* ]]
+[[ $PROMPT == *"${_plainlevel_bg}236m%}${_plainlevel_fg}244m%}·"* ]]
 [[ $PROMPT == *'╭─'* ]]
 [[ $PROMPT == *'╰─'* ]]
 [[ $PROMPT == *'▓▒░'* ]]
@@ -85,7 +91,23 @@ source "$generated"
 [[ $PLAINLEVEL_GIT_ICON == '⎇' ]]
 [[ $PLAINLEVEL_DURATION_FG == 248 ]]
 [[ $PLAINLEVEL_TIME_FG == 66 ]]
-[[ $PLAINLEVEL_RIGHT_SEPARATOR == '◁' ]]
+[[ $PLAINLEVEL_RIGHT_SEPARATOR == '·' ]]
+[[ $PLAINLEVEL_VENV_ICON == '🐍' ]]
+
+for theme in tenfold afterglow night-shift; do
+  "$root/bin/shelltone" configure --theme "$theme" --preset compact --output "$generated" >/dev/null
+  source "$generated"
+  [[ $PLAINLEVEL_STYLE == "$theme" ]]
+  [[ $PLAINLEVEL_OS_BG == $PLAINLEVEL_DIR_BG ]]
+  [[ $PLAINLEVEL_DIR_BG == $PLAINLEVEL_GIT_CLEAN_BG ]]
+  [[ $PLAINLEVEL_DIR_BG == $PLAINLEVEL_GIT_DIRTY_BG ]]
+  [[ $PLAINLEVEL_DIR_BG == $PLAINLEVEL_INFO_BG ]]
+  [[ $PLAINLEVEL_DIR_BG == $PLAINLEVEL_STATUS_BG ]]
+  [[ $PLAINLEVEL_DIR_FG != $PLAINLEVEL_DIR_BG ]]
+  [[ $PLAINLEVEL_GIT_CLEAN_FG != $PLAINLEVEL_GIT_CLEAN_BG ]]
+  [[ $PLAINLEVEL_GIT_DIRTY_FG != $PLAINLEVEL_GIT_DIRTY_BG ]]
+  [[ $PLAINLEVEL_TIME_FG != $PLAINLEVEL_INFO_BG ]]
+done
 
 # Guard the files the user explicitly asked us not to modify.
 [[ -r "$HOME/.zshrc" ]]
