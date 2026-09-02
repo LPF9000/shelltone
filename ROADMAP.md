@@ -1,0 +1,19 @@
+# Shelltone theme plan
+
+Shelltone stays small on purpose. A theme should feel like a considered prompt, not a pile of unrelated status widgets.
+
+## Available now
+
+- **Tenfold** — the bright, framed, two-line signature look. Its name is a wink at the family of big-number prompt themes without borrowing their implementation.
+- **Afterglow** — magenta, peach, and cyan for a late-night terminal.
+- **Night Shift** — cool blues and restrained contrast for long sessions.
+
+The setup wizard begins with these choices, previews the selected palette, then asks about line height, spacing, and clock format. Noninteractive setup uses `shelltone configure --theme NAME --preset classic|compact`.
+
+## Next themes
+
+- **Northstar** — crisp arctic blue with a compact, information-first rhythm.
+- **Harbor** — quiet sea-glass colors and a calm single-line default.
+- **Sunset Strip** — warm terminal glow with a deliberately minimal right prompt.
+
+Before a new theme lands, it needs a distinct palette, a compact and two-line preview, and a configuration path that works without a custom font. The names can nod to the prompt culture that inspired the look, but the design and implementation remain Shelltone's own.
