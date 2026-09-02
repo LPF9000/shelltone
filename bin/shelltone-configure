@@ -3,7 +3,7 @@ emulate -L zsh
 setopt err_return no_unset
 
 local root=${0:A:h:h}
-local output=${PLAINLEVEL_CONFIG:-$root/config/plainlevel-classic.zsh}
+local output=${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}
 local preset=interactive
 local theme=tenfold
 
@@ -38,14 +38,14 @@ done
 local two_lines=true add_newline=true show_time=true time_format='%I:%M:%S %p'
 local show_context=auto duration=3 max_dir=38
 local bar_bg=236 frame_color=240 separator_fg=244 fade_fg=236 os_fg=255
-local dir_fg=39 git_clean_fg=76 git_dirty_fg=178 info_fg=39
+local dir_fg=39 git_clean_fg=81 git_dirty_fg=220 info_fg=39
 local duration_fg=248 time_fg=66 status_ok_fg=70 status_error_fg=160
 
-function _plainlevel_configure_clear() {
+function _shelltone_configure_clear() {
   print -n -- $'\e[2J\e[H'
 }
 
-function _plainlevel_configure_choice() {
+function _shelltone_configure_choice() {
   local allowed=$1 prompt=$2
   while true; do
     read -rk1 "answer?$prompt"
@@ -54,7 +54,7 @@ function _plainlevel_configure_choice() {
   done
 }
 
-function _plainlevel_configure_preview() {
+function _shelltone_configure_preview() {
   local height=${1:-2} clock=${2:-12} failed=${3:-false}
   local reset=$'\e[0m' frame=$'\e[38;5;'${frame_color}m bar=$'\e[48;5;'${bar_bg}m
   local blue=$'\e[38;5;'${dir_fg}';1m' fade=$'\e[38;5;'${fade_fg}m divider=$'\e[38;5;'${separator_fg}m
@@ -82,18 +82,18 @@ function _plainlevel_configure_preview() {
   fi
 }
 
-function _plainlevel_configure_theme() {
+function _shelltone_configure_theme() {
   case $theme in
     tenfold)
       ;;
     afterglow)
       bar_bg=235 frame_color=141 separator_fg=177 fade_fg=237 os_fg=225
-      dir_fg=213 git_clean_fg=81 git_dirty_fg=221 info_fg=117
+      dir_fg=213 git_clean_fg=87 git_dirty_fg=221 info_fg=117
       duration_fg=225 time_fg=177 status_ok_fg=81 status_error_fg=204
       ;;
     night-shift)
       bar_bg=234 frame_color=67 separator_fg=110 fade_fg=237 os_fg=255
-      dir_fg=75 git_clean_fg=114 git_dirty_fg=215 info_fg=153
+      dir_fg=75 git_clean_fg=159 git_dirty_fg=215 info_fg=153
       duration_fg=252 time_fg=110 status_ok_fg=114 status_error_fg=203
       ;;
     *)
@@ -115,7 +115,7 @@ elif [[ $preset == interactive ]]; then
     return 2
   }
   local answer preview_height=2 preview_clock=12
-  _plainlevel_configure_clear
+  _shelltone_configure_clear
   print -P '%F{blue}%BShelltone theme picker%b%f'
   print
   print -- 'Pick a starting look. You can tune its layout in the next few screens.'
@@ -124,15 +124,15 @@ elif [[ $preset == interactive ]]; then
   print -P '%B(2) Afterglow%b   Warm neon and late-night color.'
   print -P '%B(3) Night Shift%b Cool blue, low-key, and compact-friendly.'
   print
-  _plainlevel_configure_choice 123q 'Theme [1/2/3/q]: '
+  _shelltone_configure_choice 123q 'Theme [1/2/3/q]: '
   [[ $answer == q ]] && return 130
   case $answer in
     1) theme=tenfold ;;
     2) theme=afterglow ;;
     3) theme=night-shift ;;
   esac
-  _plainlevel_configure_theme || return
-  _plainlevel_configure_clear
+  _shelltone_configure_theme || return
+  _shelltone_configure_clear
   print -P '%F{blue}%BShelltone setup: '${theme}'%b%f'
   print
   print -- 'This wizard will show each choice before changing your sandbox prompt.'
@@ -142,7 +142,7 @@ elif [[ $preset == interactive ]]; then
   print -- 'Fades:  ▓▒░  ░▒▓'
   print -- 'Status: ✔   ✘'
   print
-  _plainlevel_configure_choice ynq 'Do these characters look clean and aligned? [y/n/q] '
+  _shelltone_configure_choice ynq 'Do these characters look clean and aligned? [y/n/q] '
   [[ $answer == q ]] && return 130
   if [[ $answer == n ]]; then
     print
@@ -151,47 +151,47 @@ elif [[ $preset == interactive ]]; then
     return 1
   fi
 
-  _plainlevel_configure_clear
+  _shelltone_configure_clear
   print -P '%BPrompt Height%b'
   print
   print -P '%B(1) One line%b'
-  _plainlevel_configure_preview 1 12
+  _shelltone_configure_preview 1 12
   print
   print -P '%B(2) Two lines%b'
-  _plainlevel_configure_preview 2 12
+  _shelltone_configure_preview 2 12
   print
-  _plainlevel_configure_choice 12q 'Choice [1/2/q]: '
+  _shelltone_configure_choice 12q 'Choice [1/2/q]: '
   [[ $answer == q ]] && return 130
   [[ $answer == 1 ]] && two_lines=false || two_lines=true
   [[ $two_lines == true ]] && preview_height=2 || preview_height=1
 
-  _plainlevel_configure_clear
+  _shelltone_configure_clear
   print -P '%BPrompt Spacing%b'
   print
   print -P '%B(1) Compact%b'
-  _plainlevel_configure_preview $preview_height 12
+  _shelltone_configure_preview $preview_height 12
   print
   print -P '%B(2) Sparse%b'
   print
-  _plainlevel_configure_preview $preview_height 12
+  _shelltone_configure_preview $preview_height 12
   print
-  _plainlevel_configure_choice 12q 'Choice [1/2/q]: '
+  _shelltone_configure_choice 12q 'Choice [1/2/q]: '
   [[ $answer == q ]] && return 130
   [[ $answer == 1 ]] && add_newline=false || add_newline=true
 
-  _plainlevel_configure_clear
+  _shelltone_configure_clear
   print -P '%BShow Current Time?%b'
   print
   print -P '%B(n) No clock%b'
-  _plainlevel_configure_preview $preview_height none
+  _shelltone_configure_preview $preview_height none
   print
   print -P '%B(1) 12-hour clock%b'
-  _plainlevel_configure_preview $preview_height 12
+  _shelltone_configure_preview $preview_height 12
   print
   print -P '%B(2) 24-hour clock%b'
-  _plainlevel_configure_preview $preview_height 24
+  _shelltone_configure_preview $preview_height 24
   print
-  _plainlevel_configure_choice n12q 'Choice [n/1/2/q]: '
+  _shelltone_configure_choice n12q 'Choice [n/1/2/q]: '
   [[ $answer == q ]] && return 130
   case $answer in
     n) show_time=false; preview_clock=none ;;
@@ -199,74 +199,74 @@ elif [[ $preset == interactive ]]; then
     2) show_time=true; time_format='%H:%M:%S'; preview_clock=24 ;;
   esac
 
-  _plainlevel_configure_clear
+  _shelltone_configure_clear
   print -P '%BFinal Preview%b'
   print
   [[ $add_newline == true ]] && print
-  _plainlevel_configure_preview $preview_height $preview_clock
+  _shelltone_configure_preview $preview_height $preview_clock
   print
   print -- 'Command-not-found example:'
-  _plainlevel_configure_preview $preview_height $preview_clock true
+  _shelltone_configure_preview $preview_height $preview_clock true
   print
-  _plainlevel_configure_choice yq 'Save this configuration? [y/q] '
+  _shelltone_configure_choice yq 'Save this configuration? [y/q] '
   [[ $answer == q ]] && return 130
 else
   print -u2 -- "shelltone configure: unknown preset: $preset"
   return 2
 fi
 
-_plainlevel_configure_theme || return
+_shelltone_configure_theme || return
 
 local parent=${output:h}
 mkdir -p -- "$parent"
 local temporary="${output}.new.$$"
 {
   print -r -- '# Generated by `shelltone configure`. Safe with unpatched, ordinary fonts.'
-  print -r -- "typeset -g PLAINLEVEL_STYLE=${theme}"
-  print -r -- "typeset -g PLAINLEVEL_COLOR_DEPTH=256"
-  print -r -- "typeset -g PLAINLEVEL_TWO_LINES=$two_lines"
-  print -r -- "typeset -g PLAINLEVEL_ADD_NEWLINE=$add_newline"
-  print -r -- "typeset -g PLAINLEVEL_SHOW_TIME=$show_time"
-  print -r -- "typeset -g PLAINLEVEL_TIME_FORMAT='${time_format}'"
-  print -r -- "typeset -g PLAINLEVEL_SHOW_CONTEXT=$show_context"
-  print -r -- 'typeset -g PLAINLEVEL_SHOW_VENV=true'
-  print -r -- "typeset -g PLAINLEVEL_VENV_ICON='🐍'"
-  print -r -- 'typeset -g PLAINLEVEL_SHOW_OS=false'
-  print -r -- "typeset -g PLAINLEVEL_DURATION_THRESHOLD=$duration"
-  print -r -- "typeset -g PLAINLEVEL_MAX_DIR_LENGTH=$max_dir"
-  print -r -- "typeset -g PLAINLEVEL_FRAME_COLOR=${frame_color}"
-  print -r -- "typeset -g PLAINLEVEL_SEPARATOR_FG=${separator_fg}"
-  print -r -- "typeset -g PLAINLEVEL_RIGHT_SEPARATOR='·'"
-  print -r -- "typeset -g PLAINLEVEL_FADE_FG=${fade_fg}"
-  print -r -- "typeset -g PLAINLEVEL_OS_BG=${bar_bg}"
-  print -r -- "typeset -g PLAINLEVEL_OS_FG=${os_fg}"
-  print -r -- "typeset -g PLAINLEVEL_DIR_BG=${bar_bg}"
-  print -r -- "typeset -g PLAINLEVEL_DIR_FG=${dir_fg}"
-  print -r -- 'typeset -g PLAINLEVEL_DIR_BOLD=true'
-  print -r -- "typeset -g PLAINLEVEL_HOME_ICON='🏠︎'"
-  print -r -- 'typeset -g PLAINLEVEL_HOME_ICON_WIDTH=2'
-  print -r -- "typeset -g PLAINLEVEL_HOME_ICON_FG=${dir_fg}"
-  print -r -- "typeset -g PLAINLEVEL_HOME_SUB_ICON='🗁'"
-  print -r -- 'typeset -g PLAINLEVEL_HOME_SUB_ICON_WIDTH=2'
-  print -r -- "typeset -g PLAINLEVEL_HOME_SUB_ICON_FG=${dir_fg}"
-  print -r -- "typeset -g PLAINLEVEL_FOLDER_ICON='🗁'"
-  print -r -- 'typeset -g PLAINLEVEL_FOLDER_ICON_WIDTH=2'
-  print -r -- "typeset -g PLAINLEVEL_FOLDER_ICON_FG=${dir_fg}"
-  print -r -- "typeset -g PLAINLEVEL_DIR_ICON_GAP='   '"
-  print -r -- "typeset -g PLAINLEVEL_GIT_CLEAN_BG=${bar_bg}"
-  print -r -- "typeset -g PLAINLEVEL_GIT_CLEAN_FG=${git_clean_fg}"
-  print -r -- "typeset -g PLAINLEVEL_GIT_DIRTY_BG=${bar_bg}"
-  print -r -- "typeset -g PLAINLEVEL_GIT_DIRTY_FG=${git_dirty_fg}"
-  print -r -- "typeset -g PLAINLEVEL_GIT_ICON='⎇'"
-  print -r -- 'typeset -g PLAINLEVEL_SHOW_DIR_ICONS=false'
-  print -r -- 'typeset -g PLAINLEVEL_SHOW_GIT_ICON=true'
-  print -r -- "typeset -g PLAINLEVEL_INFO_BG=${bar_bg}"
-  print -r -- "typeset -g PLAINLEVEL_INFO_FG=${info_fg}"
-  print -r -- "typeset -g PLAINLEVEL_DURATION_FG=${duration_fg}"
-  print -r -- "typeset -g PLAINLEVEL_TIME_FG=${time_fg}"
-  print -r -- "typeset -g PLAINLEVEL_STATUS_BG=${bar_bg}"
-  print -r -- "typeset -g PLAINLEVEL_STATUS_OK_FG=${status_ok_fg}"
-  print -r -- "typeset -g PLAINLEVEL_STATUS_ERROR_FG=${status_error_fg}"
+  print -r -- "typeset -g SHELLTONE_STYLE=${theme}"
+  print -r -- "typeset -g SHELLTONE_COLOR_DEPTH=256"
+  print -r -- "typeset -g SHELLTONE_TWO_LINES=$two_lines"
+  print -r -- "typeset -g SHELLTONE_ADD_NEWLINE=$add_newline"
+  print -r -- "typeset -g SHELLTONE_SHOW_TIME=$show_time"
+  print -r -- "typeset -g SHELLTONE_TIME_FORMAT='${time_format}'"
+  print -r -- "typeset -g SHELLTONE_SHOW_CONTEXT=$show_context"
+  print -r -- 'typeset -g SHELLTONE_SHOW_VENV=true'
+  print -r -- "typeset -g SHELLTONE_VENV_ICON='🐍'"
+  print -r -- 'typeset -g SHELLTONE_SHOW_OS=false'
+  print -r -- "typeset -g SHELLTONE_DURATION_THRESHOLD=$duration"
+  print -r -- "typeset -g SHELLTONE_MAX_DIR_LENGTH=$max_dir"
+  print -r -- "typeset -g SHELLTONE_FRAME_COLOR=${frame_color}"
+  print -r -- "typeset -g SHELLTONE_SEPARATOR_FG=${separator_fg}"
+  print -r -- "typeset -g SHELLTONE_RIGHT_SEPARATOR='·'"
+  print -r -- "typeset -g SHELLTONE_FADE_FG=${fade_fg}"
+  print -r -- "typeset -g SHELLTONE_OS_BG=${bar_bg}"
+  print -r -- "typeset -g SHELLTONE_OS_FG=${os_fg}"
+  print -r -- "typeset -g SHELLTONE_DIR_BG=${bar_bg}"
+  print -r -- "typeset -g SHELLTONE_DIR_FG=${dir_fg}"
+  print -r -- 'typeset -g SHELLTONE_DIR_BOLD=true'
+  print -r -- "typeset -g SHELLTONE_HOME_ICON='🏠︎'"
+  print -r -- 'typeset -g SHELLTONE_HOME_ICON_WIDTH=2'
+  print -r -- "typeset -g SHELLTONE_HOME_ICON_FG=${dir_fg}"
+  print -r -- "typeset -g SHELLTONE_HOME_SUB_ICON='🗁'"
+  print -r -- 'typeset -g SHELLTONE_HOME_SUB_ICON_WIDTH=2'
+  print -r -- "typeset -g SHELLTONE_HOME_SUB_ICON_FG=${dir_fg}"
+  print -r -- "typeset -g SHELLTONE_FOLDER_ICON='🗁'"
+  print -r -- 'typeset -g SHELLTONE_FOLDER_ICON_WIDTH=2'
+  print -r -- "typeset -g SHELLTONE_FOLDER_ICON_FG=${dir_fg}"
+  print -r -- "typeset -g SHELLTONE_DIR_ICON_GAP='   '"
+  print -r -- "typeset -g SHELLTONE_GIT_CLEAN_BG=${bar_bg}"
+  print -r -- "typeset -g SHELLTONE_GIT_CLEAN_FG=${git_clean_fg}"
+  print -r -- "typeset -g SHELLTONE_GIT_DIRTY_BG=${bar_bg}"
+  print -r -- "typeset -g SHELLTONE_GIT_DIRTY_FG=${git_dirty_fg}"
+  print -r -- "typeset -g SHELLTONE_GIT_ICON='⎇'"
+  print -r -- 'typeset -g SHELLTONE_SHOW_DIR_ICONS=false'
+  print -r -- 'typeset -g SHELLTONE_SHOW_GIT_ICON=true'
+  print -r -- "typeset -g SHELLTONE_INFO_BG=${bar_bg}"
+  print -r -- "typeset -g SHELLTONE_INFO_FG=${info_fg}"
+  print -r -- "typeset -g SHELLTONE_DURATION_FG=${duration_fg}"
+  print -r -- "typeset -g SHELLTONE_TIME_FG=${time_fg}"
+  print -r -- "typeset -g SHELLTONE_STATUS_BG=${bar_bg}"
+  print -r -- "typeset -g SHELLTONE_STATUS_OK_FG=${status_ok_fg}"
+  print -r -- "typeset -g SHELLTONE_STATUS_ERROR_FG=${status_error_fg}"
 } >| "$temporary"
 mv -f -- "$temporary" "$output"
 print -r -- "Wrote $output"
