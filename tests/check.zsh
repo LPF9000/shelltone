@@ -38,6 +38,19 @@ command git init --bare -q "$remote"
 command git -C "$git_scratch" remote add origin "$remote"
 command git -C "$git_scratch" push -qu origin HEAD
 command git -C "$git_scratch" branch --set-upstream-to=origin/$(command git -C "$git_scratch" branch --show-current) >/dev/null
+
+local previous_directory=$PWD
+cd "$git_scratch"
+_shelltone_git
+local labels='' i
+for (( i = 3; i <= ${#_shelltone_git_parts}; i += 4 )); do
+  labels+=" ${_shelltone_git_parts[i]}"
+done
+[[ $labels == *'⎇'* && $labels != *'⇡'* && $labels != *'+'* && $labels != *'!'* && $labels != *'?'* ]]
+_shelltone_set_prompt
+[[ $PROMPT == *'⎇'* ]]
+cd "$previous_directory"
+
 print ahead > "$git_scratch/ahead"
 command git -C "$git_scratch" add ahead
 command git -C "$git_scratch" commit -qm ahead
@@ -46,10 +59,9 @@ command git -C "$git_scratch" add staged
 print changed >> "$git_scratch/tracked"
 print untracked > "$git_scratch/untracked"
 
-local previous_directory=$PWD
 cd "$git_scratch"
 _shelltone_git
-local labels='' i
+labels=''
 for (( i = 3; i <= ${#_shelltone_git_parts}; i += 4 )); do
   labels+=" ${_shelltone_git_parts[i]}"
 done
@@ -68,5 +80,14 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   [[ $SHELLTONE_GIT_STAGED_FG != $SHELLTONE_GIT_CHANGED_FG ]]
   [[ $SHELLTONE_GIT_CHANGED_FG != $SHELLTONE_GIT_UNTRACKED_FG ]]
 done
+
+export SHELLTONE_CONFIG="$scratch/active.sh"
+shelltone configure --theme harbor --preset compact >/dev/null
+[[ $SHELLTONE_THEME == harbor && $SHELLTONE_TWO_LINES == false ]]
+
+local sandbox_output
+sandbox_output=$(print exit | "$root/bin/try-shelltone" --shell zsh 2>&1)
+[[ $sandbox_output == *'Shelltone sandbox'* && $sandbox_output == *'⎇'* ]]
+unset SHELLTONE_CONFIG
 
 print -- 'zsh checks passed'

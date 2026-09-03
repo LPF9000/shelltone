@@ -27,6 +27,13 @@ git init --bare -q "$remote"
 git -C "$git_scratch" remote add origin "$remote"
 git -C "$git_scratch" push -qu origin HEAD
 git -C "$git_scratch" branch --set-upstream-to="origin/$(git -C "$git_scratch" branch --show-current)" >/dev/null
+
+previous_directory=$PWD
+cd "$git_scratch"
+_shelltone_bash_git
+[[ $SHELLTONE_BASH_GIT == *'⎇'* && $SHELLTONE_BASH_GIT != *'⇡'* && $SHELLTONE_BASH_GIT != *'+'* && $SHELLTONE_BASH_GIT != *'!'* && $SHELLTONE_BASH_GIT != *'?'* ]]
+cd "$previous_directory"
+
 printf 'ahead\n' > "$git_scratch/ahead"
 git -C "$git_scratch" add ahead
 git -C "$git_scratch" commit -qm ahead
@@ -35,7 +42,6 @@ git -C "$git_scratch" add staged
 printf 'changed\n' >> "$git_scratch/tracked"
 printf 'untracked\n' > "$git_scratch/untracked"
 
-previous_directory=$PWD
 cd "$git_scratch"
 _shelltone_bash_git
 [[ $SHELLTONE_BASH_GIT == *'⇡1'* && $SHELLTONE_BASH_GIT == *'+1'* && $SHELLTONE_BASH_GIT == *'!1'* && $SHELLTONE_BASH_GIT == *'?1'* ]]
@@ -52,5 +58,13 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   [[ $SHELLTONE_GIT_STAGED_FG != $SHELLTONE_GIT_CHANGED_FG ]]
   [[ $SHELLTONE_GIT_CHANGED_FG != $SHELLTONE_GIT_UNTRACKED_FG ]]
 done
+
+export SHELLTONE_CONFIG="$scratch/active.sh"
+shelltone configure --theme harbor --preset compact >/dev/null
+[[ $SHELLTONE_THEME == harbor && $SHELLTONE_TWO_LINES == false ]]
+
+sandbox_output=$(printf 'exit\n' | "$root/bin/try-shelltone" --shell bash 2>&1)
+[[ $sandbox_output == *'Shelltone Bash sandbox'* && $sandbox_output == *'⎇'* ]]
+unset SHELLTONE_CONFIG
 
 printf '%s\n' 'bash checks passed'
