@@ -66,7 +66,7 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   [[ $SHELLTONE_BASH_TOP == *"38;5;${SHELLTONE_FRAME_COLOR}m"* ]]
   [[ $SHELLTONE_BASH_TOP == *"48;5;${SHELLTONE_BAR_BG}m"* ]]
   [[ $SHELLTONE_BASH_TOP == *"38;5;${SHELLTONE_DIR_FG}m"* ]]
-  [[ $SHELLTONE_BASH_GIT == *"38;5;${SHELLTONE_GIT_DIRTY_FG}m\\] ⎇"* ]]
+  [[ $SHELLTONE_BASH_GIT == *"38;5;${SHELLTONE_GIT_CLEAN_FG}m\\] ⎇"* ]]
   if [[ $theme == tenfold ]]; then
     [[ $SHELLTONE_DIR_BOLD == true && $SHELLTONE_BASH_TOP == *"${_shelltone_bash_bold}"* ]]
   else
