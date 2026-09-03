@@ -3,35 +3,36 @@
 </p>
 
 <p align="center">
-  A small, colorful Zsh prompt that looks good in the font you already use.
+  A small, colorful Bash and Zsh prompt that looks good in the font you already use.
 </p>
 
 # Shelltone
 
 [![Checks](https://github.com/LPF9000/shelltone/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/shelltone/actions/workflows/ci.yml)
 
-Shelltone is a dependency-free Zsh prompt with a little bit of retro glow and none of the usual font ceremony. It is for people who want a useful prompt—not a dashboard bolted to their shell. No Nerd Font, no Powerline glyphs, no plugin manager, and no framework required.
+Shelltone is a dependency-free Bash and Zsh prompt with a little bit of retro glow and none of the usual font ceremony. It is for people who want a useful prompt—not a dashboard bolted to their shell. No Nerd Font, no Powerline glyphs, no plugin manager, and no framework required.
 
 It keeps the good parts close: the directory and Git branch on the left; command result, duration, jobs, environment, remote context, and clock on the right. When the terminal gets narrow, it quietly drops right-side details instead of wrapping your prompt into a mess.
 
 ## What it feels like
 
 ```text
-╭─ ~/projects/shelltone ▓▒░                 ░▒▓ ✔ · 4s · 11:17:04 AM
+╭─ ~/projects/shelltone ⎇ main ⇡1 +2 !1 ?1 ▓▒░       ░▒▓ ✔ · 4s · 11:17:04 AM
 ╰─ > git status
 ```
 
-Start with **Tenfold**, **Afterglow**, or **Night Shift**. Each has its own palette and can be set up as a full two-line prompt or a lean one-line prompt. All of them use ordinary Unicode characters, so a normal Unicode-capable terminal font is enough.
+Start with **Tenfold**, **Afterglow**, **Night Shift**, **Northstar**, **Harbor**, or **Sunset Strip**. Each has its own palette and can be set up as a full two-line prompt or a lean one-line prompt. All of them use ordinary Unicode characters, so a normal Unicode-capable terminal font is enough.
 
 ## Try it without touching your shell
 
 Clone the repository, then run:
 
-```zsh
-./bin/try-shelltone
+```sh
+./bin/try-shelltone --shell zsh
+./bin/try-shelltone --shell bash
 ```
 
-That opens a child Zsh with a disposable `ZDOTDIR`. It does not read or alter `~/.zshrc`, does not load your usual Zsh configuration, and does not replace it. Type `exit` when you are done; the temporary startup directory and its history go away with it.
+That opens a child shell with isolated startup files. It does not read or alter your regular shell configuration. Type `exit` when you are done; the temporary startup directory and its history go away with it.
 
 The sandbox also includes a few portable conveniences: colored `ls`, `ll`, `la`, `foldersize`, `projects`, and `reload`. They apply only to that test shell.
 
@@ -39,19 +40,46 @@ The sandbox also includes a few portable conveniences: colored `ls`, `ll`, `la`,
 
 Inside the sandbox, run the live configuration wizard:
 
-```zsh
+```sh
 shelltone configure
 shelltone reload
 ```
 
 It previews prompt height, spacing, clock format, and success/failure status before writing a config file. For a quick starting point:
 
-```zsh
+```sh
 ./bin/shelltone configure --theme tenfold --preset classic
 ./bin/shelltone configure --theme night-shift --preset compact
 ```
 
-By default this writes `config/shelltone-classic.zsh`; pass `--output FILE` to keep a separate config. The settings are deliberately boring Zsh variables and 256-color values, which makes new themes easy to add, copy, and tune without learning a mini language.
+By default this writes `config/shelltone.zsh`; pass `--output FILE` to keep a separate config. The settings are plain shell assignments and 256-color values, which makes new themes easy to add, copy, and tune without learning a mini language.
+
+To enable it permanently, add the matching command to the end of your shell startup file:
+
+```sh
+eval "$(./bin/shelltone init zsh)"   # ~/.zshrc
+eval "$(./bin/shelltone init bash)"  # ~/.bashrc
+```
+
+## Git at a glance
+
+The Git segment reports only state that needs attention. Colors are theme-specific and intentionally distinct:
+
+- `⇣` / `⇡` — commits behind or ahead of the upstream branch.
+- `⇠` / `⇢` — commits behind or ahead of a separately configured push branch.
+- `+` — staged files; `!` — modified files; `?` — untracked files.
+
+This makes `⇣21 ⇡27 ⇠21 ⇢27 +6 !12 ?1` readable without turning the prompt into a full status screen.
+
+## Optional alias packs
+
+Shelltone never changes aliases unless asked. The sandbox enables the `starter` pack, which includes `ll`, `la`, `foldersize`, `projects`, and `reload`. Enable a pack explicitly in an existing shell:
+
+```sh
+shelltone aliases starter
+shelltone aliases navigation
+shelltone aliases git
+```
 
 ## Themes, without bloat
 
@@ -59,19 +87,19 @@ Shelltone starts setup with a theme picker, then walks through that theme's layo
 
 ## What is in here
 
-- `shelltone.zsh` — the small prompt engine behind the `shelltone` command.
-- `config/shelltone-classic.zsh` — the editable default theme configuration.
-- `shelltone-sandbox.zsh` — the isolated child-shell startup logic.
-- `shelltone-aliases.zsh` — sandbox-only conveniences.
+- `shelltone.zsh` and `shelltone.bash` — small prompt engines behind the `shelltone` command.
+- `config/shelltone.zsh` — the editable default theme configuration, shared by both shells.
+- `themes/` — portable palette definitions.
+- `shelltone-sandbox.zsh` and `shelltone-bash-sandbox.sh` — isolated child-shell startup logic.
+- `shelltone-aliases.sh` — opt-in convenience packs.
 - `bin/try-shelltone` — safe preview launcher.
 - `bin/shelltone` — the public Shelltone command.
 - `bin/shelltone-configure` — configuration wizard and presets.
-- `tests/check.zsh` — syntax and behavior smoke checks.
+- `tests/check.zsh` and `tests/check.bash` — syntax and behavior smoke checks.
 
 Run the checks with:
 
-```zsh
+```sh
+./tests/check.bash
 ./tests/check.zsh
 ```
-
-The older filenames and `shelltone` command are kept only as a quiet compatibility layer for existing local setups. New instructions and new configurations use Shelltone.
