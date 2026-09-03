@@ -1,26 +1,29 @@
-#!/usr/bin/env zsh
-emulate -L zsh
-setopt err_exit no_unset
+#!/usr/bin/env sh
+set -eu
 
-local root=${0:A:h:h}
-local zdot
-zdot=$(mktemp -d ${TMPDIR:-/tmp}/shelltone-zdot.XXXXXX)
-function cleanup_shelltone_zdot() {
-  rm -rf -- "$zdot"
-}
-trap 'cleanup_shelltone_zdot; exit 130' HUP INT TERM
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+shell=zsh
+if [ "${1-}" = "--shell" ]; then
+  shell=${2-}
+  shift 2
+fi
+[ "$#" -eq 0 ] || { printf '%s\n' 'usage: try-shelltone [--shell bash|zsh]' >&2; exit 2; }
 
-# Zsh requires this conventional filename. It exists only in the temporary directory
-# for the lifetime of the sandbox; the maintained startup file has a distinct name.
-ln -s "$root/shelltone-sandbox.zsh" "$zdot/.zshrc"
-
-setopt no_err_exit
-SHELLTONE_THEME="$root/shelltone.zsh" \
-SHELLTONE_ROOT="$root" \
-SHELLTONE_CONFIG="${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}" \
-SHELLTONE_SANDBOX_HISTORY="$zdot/history" \
-ZDOTDIR="$zdot" \
-zsh -d -i
-local child_status=$?
-cleanup_shelltone_zdot
-exit $child_status
+case $shell in
+  zsh)
+    zdot=$(mktemp -d "${TMPDIR:-/tmp}/shelltone-zdot.XXXXXX")
+    trap 'rm -rf -- "$zdot"' EXIT HUP INT TERM
+    ln -s "$root/shelltone-sandbox.zsh" "$zdot/.zshrc"
+    SHELLTONE_THEME="$root/shelltone.zsh" SHELLTONE_ROOT="$root" \
+      SHELLTONE_CONFIG="${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}" \
+      SHELLTONE_SANDBOX_HISTORY="$zdot/history" ZDOTDIR="$zdot" zsh -d -i
+    ;;
+  bash)
+    SHELLTONE_ROOT="$root" SHELLTONE_CONFIG="${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}" \
+      bash --noprofile --rcfile "$root/shelltone-bash-sandbox.sh" -i
+    ;;
+  *)
+    printf '%s\n' 'try-shelltone: --shell must be bash or zsh' >&2
+    exit 2
+    ;;
+esac

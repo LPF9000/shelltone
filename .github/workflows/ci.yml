@@ -11,12 +11,17 @@ permissions:
 
 jobs:
   test:
-    name: Zsh checks
+    name: ${{ matrix.shell }} checks
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [bash, zsh]
     steps:
       - uses: actions/checkout@v5
       - name: Install Zsh
+        if: matrix.shell == 'zsh'
         run: sudo apt-get update && sudo apt-get install --yes zsh
       - name: Run checks
-        run: zsh ./tests/check.zsh
+        run: ./tests/check.${{ matrix.shell }}

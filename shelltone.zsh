@@ -22,13 +22,14 @@ typeset -g SHELLTONE_VERSION=0.1.0
 : ${SHELLTONE_SHOW_OS:=false}
 : ${SHELLTONE_DURATION_THRESHOLD:=3}
 : ${SHELLTONE_MAX_DIR_LENGTH:=38}
+: ${SHELLTONE_BAR_BG:=236}
 : ${SHELLTONE_FRAME_COLOR:=240}
 : ${SHELLTONE_SEPARATOR_FG:=244}
 : ${SHELLTONE_RIGHT_SEPARATOR:=·}
 : ${SHELLTONE_FADE_FG:=236}
-: ${SHELLTONE_OS_BG:=236}
+: ${SHELLTONE_OS_BG:=$SHELLTONE_BAR_BG}
 : ${SHELLTONE_OS_FG:=255}
-: ${SHELLTONE_DIR_BG:=236}
+: ${SHELLTONE_DIR_BG:=$SHELLTONE_BAR_BG}
 : ${SHELLTONE_DIR_FG:=39}
 : ${SHELLTONE_DIR_BOLD:=true}
 : ${SHELLTONE_HOME_ICON:=🏠︎}
@@ -41,18 +42,25 @@ typeset -g SHELLTONE_VERSION=0.1.0
 : ${SHELLTONE_FOLDER_ICON_WIDTH:=2}
 : ${SHELLTONE_FOLDER_ICON_FG:=39}
 : ${SHELLTONE_DIR_ICON_GAP:='   '}
-: ${SHELLTONE_GIT_CLEAN_BG:=236}
-: ${SHELLTONE_GIT_CLEAN_FG:=76}
-: ${SHELLTONE_GIT_DIRTY_BG:=236}
-: ${SHELLTONE_GIT_DIRTY_FG:=178}
+: ${SHELLTONE_GIT_CLEAN_BG:=$SHELLTONE_BAR_BG}
+: ${SHELLTONE_GIT_CLEAN_FG:=81}
+: ${SHELLTONE_GIT_DIRTY_BG:=$SHELLTONE_BAR_BG}
+: ${SHELLTONE_GIT_DIRTY_FG:=220}
+: ${SHELLTONE_GIT_AHEAD_FG:=81}
+: ${SHELLTONE_GIT_BEHIND_FG:=214}
+: ${SHELLTONE_GIT_PUSH_AHEAD_FG:=117}
+: ${SHELLTONE_GIT_PUSH_BEHIND_FG:=178}
+: ${SHELLTONE_GIT_STAGED_FG:=75}
+: ${SHELLTONE_GIT_CHANGED_FG:=215}
+: ${SHELLTONE_GIT_UNTRACKED_FG:=203}
 : ${SHELLTONE_GIT_ICON:=⎇}
 : ${SHELLTONE_SHOW_DIR_ICONS:=false}
 : ${SHELLTONE_SHOW_GIT_ICON:=true}
-: ${SHELLTONE_INFO_BG:=236}
+: ${SHELLTONE_INFO_BG:=$SHELLTONE_BAR_BG}
 : ${SHELLTONE_INFO_FG:=39}
 : ${SHELLTONE_DURATION_FG:=248}
 : ${SHELLTONE_TIME_FG:=66}
-: ${SHELLTONE_STATUS_BG:=236}
+: ${SHELLTONE_STATUS_BG:=$SHELLTONE_BAR_BG}
 : ${SHELLTONE_STATUS_OK_FG:=70}
 : ${SHELLTONE_STATUS_ERROR_FG:=160}
 
@@ -62,7 +70,7 @@ zmodload zsh/datetime 2>/dev/null || true
 typeset -g _shelltone_last_status=0
 typeset -gF _shelltone_command_started=0
 typeset -gF _shelltone_command_elapsed=0
-typeset -ga _shelltone_left_parts _shelltone_right_parts
+typeset -ga _shelltone_left_parts _shelltone_right_parts _shelltone_git_parts
 typeset -gr _shelltone_fg=$'%{\e[38;5;'
 typeset -gr _shelltone_bg=$'%{\e[48;5;'
 typeset -gr _shelltone_fg_reset=$'%{\e[39m%}'
@@ -126,29 +134,55 @@ function _shelltone_directory() {
 }
 
 function _shelltone_git() {
-  local root branch dirty ahead behind prefix=''
+  local root branch porcelain ahead=0 behind=0 push_ahead=0 push_behind=0 prefix=''
+  local upstream_ref='' push_ref=''
+  local staged=0 changed=0 untracked=0 line index worktree
   root=$(command git rev-parse --show-toplevel 2>/dev/null) || return 1
   branch=$(command git symbolic-ref --quiet --short HEAD 2>/dev/null) ||
     branch="@$(command git rev-parse --short HEAD 2>/dev/null)"
-  dirty=$(command git status --porcelain --untracked-files=normal 2>/dev/null)
+  porcelain=$(command git status --porcelain --untracked-files=normal 2>/dev/null)
   local counts
   counts=$(command git rev-list --left-right --count '@{upstream}...HEAD' 2>/dev/null) || counts=''
   if [[ -n $counts ]]; then
     behind=${counts%%[[:space:]]*}
     ahead=${counts##*[[:space:]]}
-    (( ahead > 0 )) && branch+=" +${ahead}"
-    (( behind > 0 )) && branch+=" -${behind}"
+    :
+  fi
+  upstream_ref=$(command git rev-parse --symbolic-full-name '@{upstream}' 2>/dev/null) || upstream_ref=''
+  push_ref=$(command git rev-parse --symbolic-full-name '@{push}' 2>/dev/null) || push_ref=''
+  if [[ -n $push_ref && $push_ref != $upstream_ref ]]; then
+    counts=$(command git rev-list --left-right --count '@{push}...HEAD' 2>/dev/null) || counts=''
+    if [[ -n $counts ]]; then
+      push_behind=${counts%%[[:space:]]*}
+      push_ahead=${counts##*[[:space:]]}
+    fi
   fi
   if _shelltone_bool "$SHELLTONE_SHOW_GIT_ICON" && [[ -n $SHELLTONE_GIT_ICON ]]; then
     prefix="${SHELLTONE_GIT_ICON}  "
   fi
-  if [[ -n $dirty ]]; then
-    REPLY="${prefix}${branch} *"
-    reply=($SHELLTONE_GIT_DIRTY_BG $SHELLTONE_GIT_DIRTY_FG "$REPLY")
-  else
-    REPLY="${prefix}${branch}"
-    reply=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CLEAN_FG "$REPLY")
-  fi
+  while IFS= read -r line; do
+    [[ -z $line ]] && continue
+    if [[ ${line[1,2]} == '??' ]]; then
+      (( ++untracked ))
+      continue
+    fi
+    index=${line[1]}
+    worktree=${line[2]}
+    [[ $index != ' ' ]] && (( ++staged ))
+    [[ $worktree != ' ' ]] && (( ++changed ))
+  done <<< "$porcelain"
+
+  _shelltone_git_parts=()
+  local branch_fg=$SHELLTONE_GIT_CLEAN_FG
+  (( staged || changed || untracked )) && branch_fg=$SHELLTONE_GIT_DIRTY_FG
+  _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $branch_fg "${prefix}${branch}" false)
+  (( behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_BEHIND_FG "⇣${behind}" false)
+  (( ahead > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_AHEAD_FG "⇡${ahead}" false)
+  (( push_behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PUSH_BEHIND_FG "⇠${push_behind}" false)
+  (( push_ahead > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PUSH_AHEAD_FG "⇢${push_ahead}" false)
+  (( staged > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_STAGED_FG "+${staged}" false)
+  (( changed > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CHANGED_FG "!${changed}" false)
+  (( untracked > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_UNTRACKED_FG "?${untracked}" false)
 }
 
 function _shelltone_render_left() {
@@ -257,7 +291,7 @@ function _shelltone_build_parts() {
   _shelltone_add_left $SHELLTONE_DIR_BG $SHELLTONE_DIR_FG "$REPLY" $SHELLTONE_DIR_BOLD
 
   if _shelltone_git; then
-    _shelltone_add_left $reply[1] $reply[2] "$reply[3]" false
+    _shelltone_left_parts+=($_shelltone_git_parts)
   fi
 
   if (( _shelltone_last_status == 0 )); then
@@ -301,7 +335,6 @@ function _shelltone_set_prompt() {
   _shelltone_parts_width _shelltone_right_parts
   right_width=$REPLY
 
-  # Drop the least important rightmost segments on narrow terminals, just as
   # Keep right-prompt details from colliding with the left side.
   while (( ${#_shelltone_right_parts} && left_width + right_width + 9 > COLUMNS )); do
     _shelltone_right_parts[-3,-1]=()
@@ -364,11 +397,22 @@ function shelltone() {
       source ${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh}
       _shelltone_set_prompt
       ;;
+    aliases)
+      shift
+      source "$SHELLTONE_ROOT/shelltone-aliases.sh"
+      shelltone_aliases_enable "${1:-starter}"
+      ;;
+    themes)
+      local theme
+      for theme in "$SHELLTONE_ROOT"/themes/*.sh; do
+        print -r -- "${theme:t:r}"
+      done
+      ;;
     version|--version|-v)
       print -r -- "shelltone $SHELLTONE_VERSION"
       ;;
     help|--help|-h)
-      print -r -- 'usage: shelltone {configure|reload|version|help}'
+      print -r -- 'usage: shelltone {configure|reload|aliases|themes|version|help}'
       ;;
     *)
       print -u2 -r -- "shelltone: unknown command: $1"

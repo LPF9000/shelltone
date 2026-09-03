@@ -10,11 +10,19 @@ Shelltone stays small on purpose. A theme should feel like a considered prompt, 
 
 The setup wizard begins with these choices, previews the selected palette, then asks about line height, spacing, and clock format. Noninteractive setup uses `shelltone configure --theme NAME --preset classic|compact`.
 
+Every theme should show Git state with a shared vocabulary: `⇣` and `⇡` for upstream movement, `⇠` and `⇢` for push movement, `+` for staged files, `!` for changed files, and `?` for untracked files. Each marker must have a distinct, palette-fitting color.
+
 ## Next themes
 
-- **Northstar** — crisp arctic blue with a compact, information-first rhythm.
-- **Harbor** — quiet sea-glass colors and a calm single-line default.
-- **Sunset Strip** — warm terminal glow with a deliberately minimal right prompt.
+- Cross-shell rendering and shared, portable theme configuration are in place.
+- Optional alias packs are available without changing a shell unless explicitly enabled.
+- Checks run against both supported shells and validate every included theme.
+
+## Next refinements
+
+- Add an optional, clearly labeled abbreviated-directory mode for deep paths.
+- Add a small installation helper that appends the selected `init` command only after confirmation.
+- Add theme screenshots generated from the sandbox for visual regression review.
 
 ## Artwork follow-up
 
