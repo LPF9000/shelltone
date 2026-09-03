@@ -70,7 +70,7 @@ _shelltone_bash_precmd() {
   _shelltone_bash_git && git=" $SHELLTONE_BASH_GIT"
   (( status == 0 )) && status_fg=$SHELLTONE_STATUS_OK_FG || status_fg=$SHELLTONE_STATUS_ERROR_FG
   [[ $SHELLTONE_SHOW_TIME == true ]] && clock=" $(_shelltone_bash_fg "$SHELLTONE_TIME_FG")$(date +"$SHELLTONE_TIME_FORMAT")"
-  SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")╭─$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") $dir$git $(_shelltone_bash_reset)$(_shelltone_bash_fg "$SHELLTONE_FADE_FG")▓▒░  ░▒▓$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")$clock$(_shelltone_bash_reset)"
+  SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")╭─$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") $dir$git ${_shelltone_bash_reset}$(_shelltone_bash_fg "$SHELLTONE_FADE_FG")▓▒░  ░▒▓$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")$clock${_shelltone_bash_reset}"
 }
 
 shelltone() {

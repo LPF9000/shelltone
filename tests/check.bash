@@ -54,9 +54,16 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   SHELLTONE_ROOT="$root" source "$generated"
   [[ $SHELLTONE_STYLE == "$theme" ]]
   [[ $SHELLTONE_TWO_LINES == false && $SHELLTONE_SHOW_TIME == false ]]
+  [[ $SHELLTONE_OS_BG == "$SHELLTONE_BAR_BG" && $SHELLTONE_DIR_BG == "$SHELLTONE_BAR_BG" ]]
+  [[ $SHELLTONE_GIT_CLEAN_BG == "$SHELLTONE_BAR_BG" && $SHELLTONE_GIT_DIRTY_BG == "$SHELLTONE_BAR_BG" ]]
+  [[ $SHELLTONE_INFO_BG == "$SHELLTONE_BAR_BG" && $SHELLTONE_STATUS_BG == "$SHELLTONE_BAR_BG" ]]
   [[ $SHELLTONE_GIT_AHEAD_FG != $SHELLTONE_GIT_BEHIND_FG ]]
   [[ $SHELLTONE_GIT_STAGED_FG != $SHELLTONE_GIT_CHANGED_FG ]]
   [[ $SHELLTONE_GIT_CHANGED_FG != $SHELLTONE_GIT_UNTRACKED_FG ]]
+  _shelltone_bash_precmd
+  [[ $SHELLTONE_BASH_TOP == *"38;5;${SHELLTONE_FRAME_COLOR}m"* ]]
+  [[ $SHELLTONE_BASH_TOP == *"48;5;${SHELLTONE_BAR_BG}m"* ]]
+  [[ $SHELLTONE_BASH_TOP == *"38;5;${SHELLTONE_DIR_FG}m"* ]]
 done
 
 SHELLTONE_CONFIG="$scratch/active.sh"
