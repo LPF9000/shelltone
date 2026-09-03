@@ -89,7 +89,7 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   [[ $PROMPT == *"${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}"* ]]
   [[ $PROMPT == *"${_shelltone_bg}${SHELLTONE_BAR_BG}m%}"* ]]
   [[ $PROMPT == *"${_shelltone_fg}${SHELLTONE_DIR_FG}m%}"* ]]
-  [[ $PROMPT == *"${_shelltone_fg}${SHELLTONE_GIT_DIRTY_FG}m%} ⎇"* ]]
+  [[ $PROMPT == *"${_shelltone_fg}${SHELLTONE_GIT_CLEAN_FG}m%} ⎇"* ]]
   if [[ $theme == tenfold ]]; then
     [[ $SHELLTONE_DIR_BOLD == true && $PROMPT == *"${_shelltone_bold}"* ]]
   else
@@ -99,7 +99,7 @@ done
 
 local preview_output
 preview_output=$(print '2\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
-[[ $preview_output == *$'\e[38;5;221m⎇ main '* && $preview_output != *$'\e[1m ~/projects '* ]]
+[[ $preview_output == *$'\e[38;5;87m⎇ main '* && $preview_output != *$'\e[1m ~/projects '* ]]
 preview_output=$(print '1\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *$'\e[1m ~/projects \e[22m'* ]]
 

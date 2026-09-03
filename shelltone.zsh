@@ -173,9 +173,7 @@ function _shelltone_git() {
   done <<< "$porcelain"
 
   _shelltone_git_parts=()
-  local branch_fg=$SHELLTONE_GIT_CLEAN_FG
-  (( staged || changed || untracked )) && branch_fg=$SHELLTONE_GIT_DIRTY_FG
-  _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $branch_fg "${prefix}${branch}" false)
+  _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CLEAN_FG "${prefix}${branch}" false)
   (( behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_BEHIND_FG "⇣${behind}" false)
   (( ahead > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_AHEAD_FG "⇡${ahead}" false)
   (( push_behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PUSH_BEHIND_FG "⇠${push_behind}" false)
