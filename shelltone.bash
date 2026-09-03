@@ -53,9 +53,7 @@ _shelltone_bash_git() {
     [[ $index != ' ' ]] && ((++staged))
     [[ $worktree != ' ' ]] && ((++changed))
   done <<< "$porcelain"
-  local branch_fg=$SHELLTONE_GIT_CLEAN_FG
-  (( staged || changed || untracked )) && branch_fg=$SHELLTONE_GIT_DIRTY_FG
-  SHELLTONE_BASH_GIT="$(_shelltone_bash_fg "$branch_fg") ⎇  $branch"
+  SHELLTONE_BASH_GIT="$(_shelltone_bash_fg "$SHELLTONE_GIT_CLEAN_FG") ⎇  $branch"
   (( behind > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_BEHIND_FG") ⇣$behind"
   (( ahead > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_AHEAD_FG") ⇡$ahead"
   (( push_behind > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_PUSH_BEHIND_FG") ⇠$push_behind"
