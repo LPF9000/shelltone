@@ -71,12 +71,12 @@ typeset -g _shelltone_last_status=0
 typeset -gF _shelltone_command_started=0
 typeset -gF _shelltone_command_elapsed=0
 typeset -ga _shelltone_left_parts _shelltone_right_parts _shelltone_git_parts
-typeset -gr _shelltone_fg=$'%{\e[38;5;'
-typeset -gr _shelltone_bg=$'%{\e[48;5;'
-typeset -gr _shelltone_fg_reset=$'%{\e[39m%}'
-typeset -gr _shelltone_bg_reset=$'%{\e[49m%}'
-typeset -gr _shelltone_bold=$'%{\e[1m%}'
-typeset -gr _shelltone_bold_reset=$'%{\e[22m%}'
+typeset -g _shelltone_fg=$'%{\e[38;5;'
+typeset -g _shelltone_bg=$'%{\e[48;5;'
+typeset -g _shelltone_fg_reset=$'%{\e[39m%}'
+typeset -g _shelltone_bg_reset=$'%{\e[49m%}'
+typeset -g _shelltone_bold=$'%{\e[1m%}'
+typeset -g _shelltone_bold_reset=$'%{\e[22m%}'
 
 function _shelltone_escape_prompt() {
   REPLY=${1//\%/%%}
@@ -183,6 +183,7 @@ function _shelltone_git() {
   (( staged > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_STAGED_FG "+${staged}" false)
   (( changed > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CHANGED_FG "!${changed}" false)
   (( untracked > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_UNTRACKED_FG "?${untracked}" false)
+  return 0
 }
 
 function _shelltone_render_left() {
@@ -391,7 +392,7 @@ function shelltone() {
   case ${1:-configure} in
     configure)
       shift
-      "$SHELLTONE_ROOT/bin/shelltone-configure" "$@"
+      "$SHELLTONE_ROOT/bin/shelltone-configure" "$@" && shelltone reload
       ;;
     reload)
       source ${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh}
