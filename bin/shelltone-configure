@@ -10,6 +10,19 @@ usage() {
   printf '%s\n' 'usage: shelltone configure [--theme NAME] [--preset classic|compact] [--output FILE]'
 }
 
+preview() {
+  . "$root/themes/$theme.sh"
+  printf '\nPreview — %s\n' "$theme"
+  printf '\033[38;5;%sm╭─\033[0m' "$SHELLTONE_FRAME_COLOR"
+  printf '\033[48;5;%sm\033[38;5;%sm ~/projects \033[38;5;%sm⎇ main \033[38;5;%sm⇡1 \033[38;5;%sm+2 \033[38;5;%sm!1 \033[38;5;%sm?1 \033[0m' \
+    "$SHELLTONE_BAR_BG" "$SHELLTONE_DIR_FG" "$SHELLTONE_GIT_CLEAN_FG" "$SHELLTONE_GIT_AHEAD_FG" "$SHELLTONE_GIT_STAGED_FG" "$SHELLTONE_GIT_CHANGED_FG" "$SHELLTONE_GIT_UNTRACKED_FG"
+  printf '\033[38;5;%sm▓▒░    ░▒▓\033[0m' "$SHELLTONE_FADE_FG"
+  printf '\033[48;5;%sm\033[38;5;%sm ✔' "$SHELLTONE_BAR_BG" "$SHELLTONE_STATUS_OK_FG"
+  [ "$show_time" = true ] && printf '\033[38;5;%sm · 11:17 AM' "$SHELLTONE_TIME_FG"
+  printf '\033[0m\n'
+  [ "$two_lines" = true ] && printf '\033[38;5;%sm╰─\033[0m > \n' "$SHELLTONE_FRAME_COLOR"
+}
+
 while [ "$#" -gt 0 ]; do
   case $1 in
     --theme) theme=${2:?shelltone configure: --theme needs a name}; shift 2 ;;
@@ -44,12 +57,15 @@ if [ "$preset" = interactive ]; then
     *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
   esac
   printf '%s\n' "Selected $theme."
+  preview
   printf '%s' 'Layout: 1) compact  2) two lines [2]: '
   IFS= read -r answer
   [ "${answer:-2}" = 1 ] && { two_lines=false; show_time=false; add_newline=false; }
+  preview
   printf '%s' 'Show a clock? [Y/n]: '
   IFS= read -r answer
   case ${answer:-y} in n|N) show_time=false ;; esac
+  preview
 fi
 
 mkdir -p "$(dirname "$output")"
