@@ -11,6 +11,7 @@ export SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh
 : "${SHELLTONE_SEPARATOR_FG:=244}"
 : "${SHELLTONE_FADE_FG:=236}"
 : "${SHELLTONE_DIR_FG:=39}"
+: "${SHELLTONE_DIR_BOLD:=true}"
 : "${SHELLTONE_GIT_CLEAN_FG:=81}"
 : "${SHELLTONE_GIT_DIRTY_FG:=220}"
 : "${SHELLTONE_GIT_AHEAD_FG:=81}"
@@ -30,6 +31,8 @@ export SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh
 _shelltone_bash_fg() { printf '\\[\\e[38;5;%sm\\]' "$1"; }
 _shelltone_bash_bg() { printf '\\[\\e[48;5;%sm\\]' "$1"; }
 _shelltone_bash_reset='\[\e[0m\]'
+_shelltone_bash_bold='\[\e[1m\]'
+_shelltone_bash_bold_reset='\[\e[22m\]'
 
 _shelltone_bash_git() {
   local branch porcelain line index worktree counts upstream_ref push_ref behind=0 ahead=0 push_behind=0 push_ahead=0 staged=0 changed=0 untracked=0
@@ -70,7 +73,9 @@ _shelltone_bash_precmd() {
   _shelltone_bash_git && git=" $SHELLTONE_BASH_GIT"
   (( status == 0 )) && status_fg=$SHELLTONE_STATUS_OK_FG || status_fg=$SHELLTONE_STATUS_ERROR_FG
   [[ $SHELLTONE_SHOW_TIME == true ]] && clock=" $(_shelltone_bash_fg "$SHELLTONE_TIME_FG")$(date +"$SHELLTONE_TIME_FORMAT")"
-  SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")╭─$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") $dir$git ${_shelltone_bash_reset}$(_shelltone_bash_fg "$SHELLTONE_FADE_FG")▓▒░  ░▒▓$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")$clock${_shelltone_bash_reset}"
+  local dir_bold='' dir_bold_reset=''
+  [[ $SHELLTONE_DIR_BOLD == true ]] && { dir_bold=${_shelltone_bash_bold}; dir_bold_reset=${_shelltone_bash_bold_reset}; }
+  SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")╭─$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") ${dir_bold}$dir${dir_bold_reset}$git ${_shelltone_bash_reset}$(_shelltone_bash_fg "$SHELLTONE_FADE_FG")▓▒░  ░▒▓$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")$clock${_shelltone_bash_reset}"
 }
 
 shelltone() {

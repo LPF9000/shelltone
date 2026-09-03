@@ -83,11 +83,25 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   [[ $SHELLTONE_GIT_STAGED_FG != $SHELLTONE_GIT_CHANGED_FG ]]
   [[ $SHELLTONE_GIT_CHANGED_FG != $SHELLTONE_GIT_UNTRACKED_FG ]]
   SHELLTONE_TWO_LINES=true
+  cd "$git_scratch"
   _shelltone_set_prompt
+  cd "$previous_directory"
   [[ $PROMPT == *"${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}"* ]]
   [[ $PROMPT == *"${_shelltone_bg}${SHELLTONE_BAR_BG}m%}"* ]]
   [[ $PROMPT == *"${_shelltone_fg}${SHELLTONE_DIR_FG}m%}"* ]]
+  [[ $PROMPT == *"${_shelltone_fg}${SHELLTONE_GIT_DIRTY_FG}m%} ⎇"* ]]
+  if [[ $theme == tenfold ]]; then
+    [[ $SHELLTONE_DIR_BOLD == true && $PROMPT == *"${_shelltone_bold}"* ]]
+  else
+    [[ $SHELLTONE_DIR_BOLD == false && $PROMPT != *"${_shelltone_bold}"* ]]
+  fi
 done
+
+local preview_output
+preview_output=$(print '2\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+[[ $preview_output == *$'\e[38;5;221m⎇ main '* && $preview_output != *$'\e[1m ~/projects '* ]]
+preview_output=$(print '1\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+[[ $preview_output == *$'\e[1m ~/projects \e[22m'* ]]
 
 SHELLTONE_CONFIG="$scratch/active.sh"
 typeset +x SHELLTONE_CONFIG
