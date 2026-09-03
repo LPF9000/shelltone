@@ -60,6 +60,7 @@ _shelltone_bash_git() {
   (( staged > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_STAGED_FG") +$staged"
   (( changed > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_CHANGED_FG") !$changed"
   (( untracked > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_UNTRACKED_FG") ?$untracked"
+  return 0
 }
 
 _shelltone_bash_precmd() {
@@ -76,7 +77,7 @@ shelltone() {
   case ${1:-help} in
     reload) . "$SHELLTONE_CONFIG" ;;
     aliases) shift; . "$SHELLTONE_ROOT/shelltone-aliases.sh"; shelltone_aliases_enable "${1:-starter}" ;;
-    configure) shift; "$SHELLTONE_ROOT/bin/shelltone-configure" "$@" ;;
+    configure) shift; "$SHELLTONE_ROOT/bin/shelltone-configure" "$@" && shelltone reload ;;
     themes) "$SHELLTONE_ROOT/bin/shelltone" themes ;;
     *) printf '%s\n' 'usage: shelltone {configure|reload|aliases|themes}' ;;
   esac

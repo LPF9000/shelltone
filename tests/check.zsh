@@ -12,6 +12,7 @@ for file in "$root/shelltone.zsh" "$root/shelltone-sandbox.zsh" "$root/bin/shell
 done
 
 source "$root/shelltone.zsh"
+source "$root/shelltone.zsh"
 source "$root/shelltone-aliases.sh"
 shelltone_aliases_enable starter
 [[ "$(alias ls)" == "ls='ls --color=auto'" ]]
@@ -24,6 +25,7 @@ COLUMNS=120
 _shelltone_set_prompt
 [[ $PROMPT == *'✘ 7'* && $PROMPT == *'4s'* && $PROMPT == *'demo 🐍'* ]]
 [[ $PROMPT == *'╭─'* && $PROMPT == *'╰─'* && $PROMPT == *'▓▒░'* && $PROMPT == *'░▒▓'* ]]
+[[ $PROMPT == *'⎇'* ]]
 
 local git_scratch="$scratch/git" remote="$scratch/remote.git"
 command git init -q "$git_scratch"
