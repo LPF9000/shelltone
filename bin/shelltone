@@ -1,6 +1,32 @@
-#!/usr/bin/env zsh
-emulate -L zsh
-setopt no_unset
-typeset -g SHELLTONE_ROOT=${0:A:h:h}
-source "$SHELLTONE_ROOT/shelltone.zsh"
-shelltone "$@"
+#!/usr/bin/env sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+case ${1:-help} in
+  init)
+    case ${2:-} in
+      bash) printf "source '%s/shelltone.bash'\n" "$root" ;;
+      zsh) printf "source '%s/shelltone.zsh'\n" "$root" ;;
+      *) printf '%s\n' 'usage: shelltone init {bash|zsh}' >&2; exit 2 ;;
+    esac
+    ;;
+  configure)
+    shift
+    exec sh "$root/bin/shelltone-configure" "$@"
+    ;;
+  preview)
+    shift
+    exec "$root/bin/try-shelltone" "$@"
+    ;;
+  themes)
+    for theme in "$root"/themes/*.sh; do basename "${theme%.sh}"; done
+    ;;
+  help|--help|-h)
+    printf '%s\n' 'usage: shelltone {init|configure|preview|themes}'
+    ;;
+  *)
+    printf '%s\n' "shelltone: unknown command: $1" >&2
+    exit 2
+    ;;
+esac

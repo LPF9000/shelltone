@@ -1,276 +1,70 @@
-#!/usr/bin/env zsh
-emulate -L zsh
-setopt err_return no_unset
+#!/usr/bin/env sh
+set -eu
 
-local root=${0:A:h:h}
-local output=${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}
-local preset=interactive
-local theme=tenfold
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+output=${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}
+theme=tenfold
+preset=interactive
 
-while (( $# )); do
+usage() {
+  printf '%s\n' 'usage: shelltone configure [--theme NAME] [--preset classic|compact] [--output FILE]'
+}
+
+while [ "$#" -gt 0 ]; do
   case $1 in
-    --output)
-      (( $# >= 2 )) || { print -u2 -- 'shelltone configure: --output needs a path'; return 2; }
-      output=$2
-      shift 2
-      ;;
-    --preset)
-      (( $# >= 2 )) || { print -u2 -- 'shelltone configure: --preset needs classic or compact'; return 2; }
-      preset=$2
-      shift 2
-      ;;
-    --theme)
-      (( $# >= 2 )) || { print -u2 -- 'shelltone configure: --theme needs tenfold, afterglow, or night-shift'; return 2; }
-      theme=$2
-      shift 2
-      ;;
-    --help|-h)
-      print -- 'usage: shelltone configure [--theme tenfold|afterglow|night-shift] [--preset classic|compact] [--output FILE]'
-      return
-      ;;
-    *)
-      print -u2 -- "shelltone configure: unknown option: $1"
-      return 2
-      ;;
+    --theme) theme=${2:?shelltone configure: --theme needs a name}; shift 2 ;;
+    --preset) preset=${2:?shelltone configure: --preset needs classic or compact}; shift 2 ;;
+    --output) output=${2:?shelltone configure: --output needs a file}; shift 2 ;;
+    --help|-h) usage; exit 0 ;;
+    *) printf '%s\n' "shelltone configure: unknown option: $1" >&2; exit 2 ;;
   esac
 done
 
-local two_lines=true add_newline=true show_time=true time_format='%I:%M:%S %p'
-local show_context=auto duration=3 max_dir=38
-local bar_bg=236 frame_color=240 separator_fg=244 fade_fg=236 os_fg=255
-local dir_fg=39 git_clean_fg=81 git_dirty_fg=220 info_fg=39
-local duration_fg=248 time_fg=66 status_ok_fg=70 status_error_fg=160
+[ -r "$root/themes/$theme.sh" ] || { printf '%s\n' "shelltone configure: unknown theme: $theme" >&2; exit 2; }
+two_lines=true
+show_time=true
+add_newline=true
 
-function _shelltone_configure_clear() {
-  print -n -- $'\e[2J\e[H'
-}
-
-function _shelltone_configure_choice() {
-  local allowed=$1 prompt=$2
-  while true; do
-    read -rk1 "answer?$prompt"
-    print
-    [[ $allowed == *$answer* ]] && return 0
-  done
-}
-
-function _shelltone_configure_preview() {
-  local height=${1:-2} clock=${2:-12} failed=${3:-false}
-  local reset=$'\e[0m' frame=$'\e[38;5;'${frame_color}m bar=$'\e[48;5;'${bar_bg}m
-  local blue=$'\e[38;5;'${dir_fg}';1m' fade=$'\e[38;5;'${fade_fg}m divider=$'\e[38;5;'${separator_fg}m
-  local duration_color=$'\e[38;5;'${duration_fg}m time_color=$'\e[38;5;'${time_fg}m
-  local status_text status_color clock_text clock_segment=''
-  if [[ $failed == true ]]; then
-    status_text=' ✘ 127 '
-    status_color=$'\e[38;5;'${status_error_fg}m
-  else
-    status_text=' ✔ '
-    status_color=$'\e[38;5;'${status_ok_fg}m
-  fi
-  case $clock in
-    12) clock_text=' 09:41:27 PM ' ;;
-    24) clock_text=' 21:41:27 ' ;;
-    *)  clock_text='' ;;
-  esac
-  [[ -n $clock_text ]] && clock_segment="${divider}·${time_color}${clock_text}"
-
-  if [[ $height == 2 ]]; then
-    print -r -- "${frame}╭─${reset}${bar}${blue} ~/projects/demo ${reset}${fade}▓▒░${reset}     ${fade}░▒▓${bar}${status_color}${status_text}${divider}·${duration_color} 4s ${clock_segment}${reset}"
-    print -r -- "${frame}╰─${reset} ${status_color}>${reset} echo hello"
-  else
-    print -r -- "${bar}${blue} ~/projects/demo ${reset}${fade}▓▒░${reset} ${status_color}>${reset} echo hello     ${fade}░▒▓${bar}${status_color}${status_text}${divider}·${duration_color} 4s ${clock_segment}${reset}"
-  fi
-}
-
-function _shelltone_configure_theme() {
-  case $theme in
-    tenfold)
-      ;;
-    afterglow)
-      bar_bg=235 frame_color=141 separator_fg=177 fade_fg=237 os_fg=225
-      dir_fg=213 git_clean_fg=87 git_dirty_fg=221 info_fg=117
-      duration_fg=225 time_fg=177 status_ok_fg=81 status_error_fg=204
-      ;;
-    night-shift)
-      bar_bg=234 frame_color=67 separator_fg=110 fade_fg=237 os_fg=255
-      dir_fg=75 git_clean_fg=159 git_dirty_fg=215 info_fg=153
-      duration_fg=252 time_fg=110 status_ok_fg=114 status_error_fg=203
-      ;;
-    *)
-      print -u2 -- "shelltone configure: unknown theme: $theme"
-      return 2
-      ;;
-  esac
-}
-
-if [[ $preset == compact ]]; then
-  two_lines=false
-  add_newline=false
-  show_time=false
-elif [[ $preset == classic ]]; then
-  :
-elif [[ $preset == interactive ]]; then
-  [[ -t 0 ]] || {
-    print -u2 -- 'shelltone configure: interactive mode needs a terminal; use --preset classic or compact'
-    return 2
-  }
-  local answer preview_height=2 preview_clock=12
-  _shelltone_configure_clear
-  print -P '%F{blue}%BShelltone theme picker%b%f'
-  print
-  print -- 'Pick a starting look. You can tune its layout in the next few screens.'
-  print
-  print -P '%B(1) Tenfold%b     The big, bright two-line original.'
-  print -P '%B(2) Afterglow%b   Warm neon and late-night color.'
-  print -P '%B(3) Night Shift%b Cool blue, low-key, and compact-friendly.'
-  print
-  _shelltone_configure_choice 123q 'Theme [1/2/3/q]: '
-  [[ $answer == q ]] && return 130
-  case $answer in
-    1) theme=tenfold ;;
-    2) theme=afterglow ;;
-    3) theme=night-shift ;;
-  esac
-  _shelltone_configure_theme || return
-  _shelltone_configure_clear
-  print -P '%F{blue}%BShelltone setup: '${theme}'%b%f'
-  print
-  print -- 'This wizard will show each choice before changing your sandbox prompt.'
-  print -- 'It uses standard Unicode only; no Nerd Font or Powerline font is required.'
-  print
-  print -- 'Frame:  ╭─  ╰─'
-  print -- 'Fades:  ▓▒░  ░▒▓'
-  print -- 'Status: ✔   ✘'
-  print
-  _shelltone_configure_choice ynq 'Do these characters look clean and aligned? [y/n/q] '
-  [[ $answer == q ]] && return 130
-  if [[ $answer == n ]]; then
-    print
-    print -- 'These are ordinary Unicode characters, but this terminal font does not render them cleanly.'
-    print -- 'No configuration was changed. Choose another already-installed Unicode-capable font and retry.'
-    return 1
-  fi
-
-  _shelltone_configure_clear
-  print -P '%BPrompt Height%b'
-  print
-  print -P '%B(1) One line%b'
-  _shelltone_configure_preview 1 12
-  print
-  print -P '%B(2) Two lines%b'
-  _shelltone_configure_preview 2 12
-  print
-  _shelltone_configure_choice 12q 'Choice [1/2/q]: '
-  [[ $answer == q ]] && return 130
-  [[ $answer == 1 ]] && two_lines=false || two_lines=true
-  [[ $two_lines == true ]] && preview_height=2 || preview_height=1
-
-  _shelltone_configure_clear
-  print -P '%BPrompt Spacing%b'
-  print
-  print -P '%B(1) Compact%b'
-  _shelltone_configure_preview $preview_height 12
-  print
-  print -P '%B(2) Sparse%b'
-  print
-  _shelltone_configure_preview $preview_height 12
-  print
-  _shelltone_configure_choice 12q 'Choice [1/2/q]: '
-  [[ $answer == q ]] && return 130
-  [[ $answer == 1 ]] && add_newline=false || add_newline=true
-
-  _shelltone_configure_clear
-  print -P '%BShow Current Time?%b'
-  print
-  print -P '%B(n) No clock%b'
-  _shelltone_configure_preview $preview_height none
-  print
-  print -P '%B(1) 12-hour clock%b'
-  _shelltone_configure_preview $preview_height 12
-  print
-  print -P '%B(2) 24-hour clock%b'
-  _shelltone_configure_preview $preview_height 24
-  print
-  _shelltone_configure_choice n12q 'Choice [n/1/2/q]: '
-  [[ $answer == q ]] && return 130
-  case $answer in
-    n) show_time=false; preview_clock=none ;;
-    1) show_time=true; time_format='%I:%M:%S %p'; preview_clock=12 ;;
-    2) show_time=true; time_format='%H:%M:%S'; preview_clock=24 ;;
-  esac
-
-  _shelltone_configure_clear
-  print -P '%BFinal Preview%b'
-  print
-  [[ $add_newline == true ]] && print
-  _shelltone_configure_preview $preview_height $preview_clock
-  print
-  print -- 'Command-not-found example:'
-  _shelltone_configure_preview $preview_height $preview_clock true
-  print
-  _shelltone_configure_choice yq 'Save this configuration? [y/q] '
-  [[ $answer == q ]] && return 130
-else
-  print -u2 -- "shelltone configure: unknown preset: $preset"
-  return 2
+if [ "$preset" = compact ]; then
+  two_lines=false; show_time=false; add_newline=false
+elif [ "$preset" != classic ] && [ "$preset" != interactive ]; then
+  printf '%s\n' "shelltone configure: unknown preset: $preset" >&2
+  exit 2
 fi
 
-_shelltone_configure_theme || return
-
-local parent=${output:h}
-mkdir -p -- "$parent"
-local temporary="${output}.new.$$"
-{
-  print -r -- '# Generated by `shelltone configure`. Safe with unpatched, ordinary fonts.'
-  print -r -- "typeset -g SHELLTONE_STYLE=${theme}"
-  print -r -- "typeset -g SHELLTONE_COLOR_DEPTH=256"
-  print -r -- "typeset -g SHELLTONE_TWO_LINES=$two_lines"
-  print -r -- "typeset -g SHELLTONE_ADD_NEWLINE=$add_newline"
-  print -r -- "typeset -g SHELLTONE_SHOW_TIME=$show_time"
-  print -r -- "typeset -g SHELLTONE_TIME_FORMAT='${time_format}'"
-  print -r -- "typeset -g SHELLTONE_SHOW_CONTEXT=$show_context"
-  print -r -- 'typeset -g SHELLTONE_SHOW_VENV=true'
-  print -r -- "typeset -g SHELLTONE_VENV_ICON='🐍'"
-  print -r -- 'typeset -g SHELLTONE_SHOW_OS=false'
-  print -r -- "typeset -g SHELLTONE_DURATION_THRESHOLD=$duration"
-  print -r -- "typeset -g SHELLTONE_MAX_DIR_LENGTH=$max_dir"
-  print -r -- "typeset -g SHELLTONE_FRAME_COLOR=${frame_color}"
-  print -r -- "typeset -g SHELLTONE_SEPARATOR_FG=${separator_fg}"
-  print -r -- "typeset -g SHELLTONE_RIGHT_SEPARATOR='·'"
-  print -r -- "typeset -g SHELLTONE_FADE_FG=${fade_fg}"
-  print -r -- "typeset -g SHELLTONE_OS_BG=${bar_bg}"
-  print -r -- "typeset -g SHELLTONE_OS_FG=${os_fg}"
-  print -r -- "typeset -g SHELLTONE_DIR_BG=${bar_bg}"
-  print -r -- "typeset -g SHELLTONE_DIR_FG=${dir_fg}"
-  print -r -- 'typeset -g SHELLTONE_DIR_BOLD=true'
-  print -r -- "typeset -g SHELLTONE_HOME_ICON='🏠︎'"
-  print -r -- 'typeset -g SHELLTONE_HOME_ICON_WIDTH=2'
-  print -r -- "typeset -g SHELLTONE_HOME_ICON_FG=${dir_fg}"
-  print -r -- "typeset -g SHELLTONE_HOME_SUB_ICON='🗁'"
-  print -r -- 'typeset -g SHELLTONE_HOME_SUB_ICON_WIDTH=2'
-  print -r -- "typeset -g SHELLTONE_HOME_SUB_ICON_FG=${dir_fg}"
-  print -r -- "typeset -g SHELLTONE_FOLDER_ICON='🗁'"
-  print -r -- 'typeset -g SHELLTONE_FOLDER_ICON_WIDTH=2'
-  print -r -- "typeset -g SHELLTONE_FOLDER_ICON_FG=${dir_fg}"
-  print -r -- "typeset -g SHELLTONE_DIR_ICON_GAP='   '"
-  print -r -- "typeset -g SHELLTONE_GIT_CLEAN_BG=${bar_bg}"
-  print -r -- "typeset -g SHELLTONE_GIT_CLEAN_FG=${git_clean_fg}"
-  print -r -- "typeset -g SHELLTONE_GIT_DIRTY_BG=${bar_bg}"
-  print -r -- "typeset -g SHELLTONE_GIT_DIRTY_FG=${git_dirty_fg}"
-  print -r -- "typeset -g SHELLTONE_GIT_ICON='⎇'"
-  print -r -- 'typeset -g SHELLTONE_SHOW_DIR_ICONS=false'
-  print -r -- 'typeset -g SHELLTONE_SHOW_GIT_ICON=true'
-  print -r -- "typeset -g SHELLTONE_INFO_BG=${bar_bg}"
-  print -r -- "typeset -g SHELLTONE_INFO_FG=${info_fg}"
-  print -r -- "typeset -g SHELLTONE_DURATION_FG=${duration_fg}"
-  print -r -- "typeset -g SHELLTONE_TIME_FG=${time_fg}"
-  print -r -- "typeset -g SHELLTONE_STATUS_BG=${bar_bg}"
-  print -r -- "typeset -g SHELLTONE_STATUS_OK_FG=${status_ok_fg}"
-  print -r -- "typeset -g SHELLTONE_STATUS_ERROR_FG=${status_error_fg}"
-} >| "$temporary"
-mv -f -- "$temporary" "$output"
-print -r -- "Wrote $output"
-if [[ $preset == interactive ]]; then
-  print -r -- 'Run `shelltone reload` to apply it now.'
+if [ "$preset" = interactive ]; then
+  printf '%s\n' 'Shelltone theme picker'
+  printf '%s\n' '1) Tenfold      2) Afterglow    3) Night Shift'
+  printf '%s\n' '4) Northstar    5) Harbor        6) Sunset Strip'
+  printf '%s' 'Theme [1-6]: '
+  IFS= read -r answer
+  case $answer in
+    1) theme=tenfold ;; 2) theme=afterglow ;; 3) theme=night-shift ;;
+    4) theme=northstar ;; 5) theme=harbor ;; 6) theme=sunset-strip ;;
+    *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
+  esac
+  printf '%s\n' "Selected $theme."
+  printf '%s' 'Layout: 1) compact  2) two lines [2]: '
+  IFS= read -r answer
+  [ "${answer:-2}" = 1 ] && { two_lines=false; show_time=false; add_newline=false; }
+  printf '%s' 'Show a clock? [Y/n]: '
+  IFS= read -r answer
+  case ${answer:-y} in n|N) show_time=false ;; esac
 fi
-true
+
+mkdir -p "$(dirname "$output")"
+temporary="$output.new.$$"
+cat >"$temporary" <<EOF
+# Generated by shelltone configure. This file is safe to source from Bash and Zsh.
+SHELLTONE_THEME=$theme
+. "\$SHELLTONE_ROOT/themes/\$SHELLTONE_THEME.sh"
+SHELLTONE_TWO_LINES=$two_lines
+SHELLTONE_ADD_NEWLINE=$add_newline
+SHELLTONE_SHOW_TIME=$show_time
+SHELLTONE_TIME_FORMAT='%I:%M:%S %p'
+SHELLTONE_SHOW_CONTEXT=auto
+SHELLTONE_SHOW_VENV=true
+SHELLTONE_ALIAS_PACK=starter
+EOF
+mv "$temporary" "$output"
+printf '%s\n' "Wrote $output"
