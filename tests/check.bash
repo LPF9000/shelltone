@@ -59,12 +59,12 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   [[ $SHELLTONE_GIT_CHANGED_FG != $SHELLTONE_GIT_UNTRACKED_FG ]]
 done
 
-export SHELLTONE_CONFIG="$scratch/active.sh"
+SHELLTONE_CONFIG="$scratch/active.sh"
+export -n SHELLTONE_CONFIG
 shelltone configure --theme harbor --preset compact >/dev/null
 [[ $SHELLTONE_THEME == harbor && $SHELLTONE_TWO_LINES == false ]]
 
 sandbox_output=$(printf 'exit\n' | "$root/bin/try-shelltone" --shell bash 2>&1)
 [[ $sandbox_output == *'Shelltone Bash sandbox'* && $sandbox_output == *'⎇'* ]]
-unset SHELLTONE_CONFIG
 
 printf '%s\n' 'bash checks passed'

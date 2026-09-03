@@ -3,7 +3,7 @@
 [[ -n ${BASH_VERSION-} ]] || return 1
 
 SHELLTONE_ROOT=${SHELLTONE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}
-SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh}
+export SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh}
 [[ -r $SHELLTONE_CONFIG ]] && . "$SHELLTONE_CONFIG"
 
 : "${SHELLTONE_BAR_BG:=236}"
@@ -77,7 +77,7 @@ shelltone() {
   case ${1:-help} in
     reload) . "$SHELLTONE_CONFIG" ;;
     aliases) shift; . "$SHELLTONE_ROOT/shelltone-aliases.sh"; shelltone_aliases_enable "${1:-starter}" ;;
-    configure) shift; "$SHELLTONE_ROOT/bin/shelltone-configure" "$@" && shelltone reload ;;
+    configure) shift; SHELLTONE_CONFIG="$SHELLTONE_CONFIG" "$SHELLTONE_ROOT/bin/shelltone-configure" "$@" && shelltone reload ;;
     themes) "$SHELLTONE_ROOT/bin/shelltone" themes ;;
     *) printf '%s\n' 'usage: shelltone {configure|reload|aliases|themes}' ;;
   esac
