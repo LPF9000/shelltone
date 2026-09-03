@@ -4,10 +4,10 @@
 [[ -n ${ZSH_VERSION-} ]] || return 1
 
 typeset -g SHELLTONE_ROOT=${${(%):-%N}:A:h}
+typeset -gx SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh}
 typeset -g SHELLTONE_VERSION=0.1.0
 
-[[ -r ${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh} ]] &&
-  source ${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh}
+[[ -r $SHELLTONE_CONFIG ]] && source "$SHELLTONE_CONFIG"
 
 # Defaults also make the theme usable with a tiny or partially written config.
 : ${SHELLTONE_STYLE:=classic}
@@ -392,10 +392,10 @@ function shelltone() {
   case ${1:-configure} in
     configure)
       shift
-      "$SHELLTONE_ROOT/bin/shelltone-configure" "$@" && shelltone reload
+      SHELLTONE_CONFIG="$SHELLTONE_CONFIG" "$SHELLTONE_ROOT/bin/shelltone-configure" "$@" && shelltone reload
       ;;
     reload)
-      source ${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh}
+      source "$SHELLTONE_CONFIG"
       _shelltone_set_prompt
       ;;
     aliases)
