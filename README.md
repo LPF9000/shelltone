@@ -34,7 +34,7 @@ Clone the repository, then run:
 
 That opens a child shell with isolated startup files. It does not read or alter your regular shell configuration. Type `exit` when you are done; the temporary startup directory and its history go away with it.
 
-The sandbox also includes a few portable conveniences: colored `ls`, `ll`, `la`, `foldersize`, `projects`, and `reload`. They apply only to that test shell.
+The sandbox changes no startup file, alias, history file, or setting outside its disposable child shell. It is only for trying Shelltone’s prompt palettes and styles.
 
 ## Make it yours
 

@@ -11,8 +11,6 @@ setopt append_history hist_ignore_dups
 autoload -Uz compinit
 compinit -d ${TMPDIR:-/tmp}/shelltone-zcompdump-$ZSH_VERSION
 
-source ${SHELLTONE_ALIASES:-${SHELLTONE_ROOT:-${SHELLTONE_THEME:h}}/shelltone-aliases.sh}
-shelltone_aliases_enable ${SHELLTONE_ALIAS_PACK:-starter}
 source ${SHELLTONE_THEME:?shelltone launcher did not set SHELLTONE_THEME}
 
 print -P '%F{blue}Shelltone sandbox%f -- your normal Zsh files were not loaded.'
