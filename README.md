@@ -21,7 +21,9 @@ It keeps the good parts close: the directory and Git branch on the left; command
 ╰─ > git status
 ```
 
-Start with **Tenfold**, **Afterglow**, **Night Shift**, **Northstar**, **Harbor**, or **Sunset Strip**. Pair any palette with **frame**, **pure**, **zen**, or **blocks** to independently choose the visual structure: bar, frame, dividers, fades, and prompt glyph. All of them use ordinary Unicode characters, so a normal Unicode-capable terminal font is enough.
+Setup starts with three finished design paths plus **Custom**. **Signal** is the layered, Powerlevel-inspired path; it lets you tune a solid or stepped bar, its joins, and its shade depth without changing its palette. **Still** is a transparent, Pure-inspired path using Pure's published default color assignments. **Contour** is a compact, Purity-inspired path with its Git detail held close to the working directory. Choose **Custom** to pair any of **Tenfold**, **Afterglow**, **Night Shift**, **Northstar**, **Harbor**, or **Sunset Strip** with **frame**, **pure**, **zen**, or **blocks**.
+
+Transparent silhouettes deliberately do not expose shaded-bar controls or dashboard details. Bar-capable silhouettes show only the controls that affect them: solid versus stepped fields, visible versus seamless joins, shade depth, height, clock, status, and duration. The stepped Blocks silhouette uses ordinary Unicode diagonal joins rather than font-specific Powerline glyphs.
 
 ## Try it without touching your shell
 
@@ -45,7 +47,7 @@ shelltone configure
 shelltone reload
 ```
 
-It previews prompt height, spacing, clock format, and success/failure status before writing a config file. For a quick starting point:
+It previews the whole chosen design path before writing a config file. For a quick non-interactive starting point:
 
 ```sh
 ./bin/shelltone configure --theme tenfold --style frame --preset classic

@@ -1,8 +1,12 @@
-# Strongly divided blocks that remain readable in an ordinary Unicode font.
+# Stepped color fields with diagonal joins. This keeps the block rhythm without
+# relying on Powerline's font-specific triangle glyphs.
 SHELLTONE_PROMPT_STYLE=blocks
 SHELLTONE_SHOW_BAR=true
-SHELLTONE_LEFT_DIVIDER='│'
-SHELLTONE_RIGHT_DIVIDER='│'
+SHELLTONE_LAYOUT_BAR_CONTROLS=true
+SHELLTONE_LAYOUT_DETAIL_CONTROLS=true
+SHELLTONE_BAR_TREATMENT=stepped
+SHELLTONE_LEFT_DIVIDER='╱'
+SHELLTONE_RIGHT_DIVIDER='╲'
 SHELLTONE_LEFT_FADE=''
 SHELLTONE_RIGHT_FADE=''
 SHELLTONE_TOP_PREFIX='╭─'
