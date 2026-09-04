@@ -7,7 +7,7 @@ local scratch
 scratch=$(mktemp -d ${TMPDIR:-/tmp}/shelltone-test.XXXXXX)
 trap 'rm -rf -- "$scratch"' EXIT
 
-for file in "$root/shelltone.zsh" "$root/shelltone-sandbox.zsh" "$root/bin/shelltone" "$root/bin/shelltone-configure" "$root/bin/try-shelltone"; do
+for file in "$root/shelltone.zsh" "$root/shelltone-sandbox.zsh" "$root/bin/shelltone" "$root/bin/shelltone-configure" "$root/bin/shelltone-install" "$root/bin/try-shelltone"; do
   zsh -n "$file"
 done
 
@@ -71,10 +71,11 @@ cd "$previous_directory"
 
 local generated="$scratch/generated.sh" theme
 for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
-  "$root/bin/shelltone" configure --theme "$theme" --preset compact --output "$generated" >/dev/null
+  "$root/bin/shelltone" configure --theme "$theme" --style frame --preset compact --output "$generated" >/dev/null
   zsh -n "$generated"
   source "$generated"
   [[ $SHELLTONE_STYLE == "$theme" ]]
+  [[ $SHELLTONE_PROMPT_STYLE == frame && $SHELLTONE_SHOW_BAR == true ]]
   [[ $SHELLTONE_TWO_LINES == false && $SHELLTONE_SHOW_TIME == false ]]
   [[ $SHELLTONE_OS_BG == $SHELLTONE_BAR_BG && $SHELLTONE_DIR_BG == $SHELLTONE_BAR_BG ]]
   [[ $SHELLTONE_GIT_CLEAN_BG == $SHELLTONE_BAR_BG && $SHELLTONE_GIT_DIRTY_BG == $SHELLTONE_BAR_BG ]]
@@ -97,10 +98,17 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   fi
 done
 
+for style in pure zen blocks; do
+  "$root/bin/shelltone" configure --theme afterglow --style "$style" --preset compact --output "$generated" >/dev/null
+  source "$generated"
+  [[ $SHELLTONE_PROMPT_STYLE == "$style" ]]
+  [[ -n $SHELLTONE_PROMPT_SYMBOL ]]
+done
+
 local preview_output
-preview_output=$(print '2\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
-[[ $preview_output == *$'\e[38;5;87m⎇ main '* && $preview_output != *$'\e[1m ~/projects '* ]]
-preview_output=$(print '1\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+preview_output=$(print '2\n1\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+[[ $preview_output == *$'\e[38;5;87m>⎇ main '* && $preview_output != *$'\e[1m ~/projects '* ]]
+preview_output=$(print '1\n1\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *$'\e[1m ~/projects \e[22m'* ]]
 
 SHELLTONE_CONFIG="$scratch/active.sh"
@@ -111,5 +119,9 @@ shelltone configure --theme harbor --preset compact >/dev/null
 local sandbox_output
 sandbox_output=$(print exit | "$root/bin/try-shelltone" --shell zsh 2>&1)
 [[ $sandbox_output == *'Shelltone sandbox'* && $sandbox_output == *'⎇'* ]]
+
+local install_output
+install_output=$(ZDOTDIR="$scratch/zdot" "$root/bin/shelltone" install zsh --dry-run)
+[[ $install_output == *"would append Shelltone to $scratch/zdot/.zshrc" ]]
 
 print -- 'zsh checks passed'

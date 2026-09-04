@@ -11,6 +11,7 @@ typeset -g SHELLTONE_VERSION=0.1.0
 
 # Defaults also make the theme usable with a tiny or partially written config.
 : ${SHELLTONE_STYLE:=classic}
+: ${SHELLTONE_PROMPT_STYLE:=frame}
 : ${SHELLTONE_COLOR_DEPTH:=256}
 : ${SHELLTONE_TWO_LINES:=true}
 : ${SHELLTONE_ADD_NEWLINE:=true}
@@ -26,6 +27,14 @@ typeset -g SHELLTONE_VERSION=0.1.0
 : ${SHELLTONE_FRAME_COLOR:=240}
 : ${SHELLTONE_SEPARATOR_FG:=244}
 : ${SHELLTONE_RIGHT_SEPARATOR:=·}
+: ${SHELLTONE_SHOW_BAR:=true}
+: ${SHELLTONE_LEFT_DIVIDER:=>}
+: ${SHELLTONE_RIGHT_DIVIDER:=$SHELLTONE_RIGHT_SEPARATOR}
+: ${SHELLTONE_LEFT_FADE:=▓▒░}
+: ${SHELLTONE_RIGHT_FADE:=░▒▓}
+: ${SHELLTONE_TOP_PREFIX:=╭─}
+: ${SHELLTONE_INPUT_PREFIX:=╰─}
+: ${SHELLTONE_PROMPT_SYMBOL:=>}
 : ${SHELLTONE_FADE_FG:=236}
 : ${SHELLTONE_OS_BG:=$SHELLTONE_BAR_BG}
 : ${SHELLTONE_OS_FG:=255}
@@ -191,9 +200,9 @@ function _shelltone_render_left() {
     fg=${_shelltone_left_parts[i + 1]}
     label=${_shelltone_left_parts[i + 2]}
     bold=${_shelltone_left_parts[i + 3]}
-    out+="${_shelltone_bg}${bg}m%}"
+    _shelltone_bool "$SHELLTONE_SHOW_BAR" && out+="${_shelltone_bg}${bg}m%}"
     if [[ $first == false ]]; then
-      out+="${_shelltone_fg}${SHELLTONE_SEPARATOR_FG}m%}>"
+      out+="${_shelltone_fg}${SHELLTONE_SEPARATOR_FG}m%}${SHELLTONE_LEFT_DIVIDER}"
     fi
     icon=''
     icon_fg=$fg
@@ -225,20 +234,21 @@ function _shelltone_render_left() {
     out+=' '
     first=false
   done
-  [[ -n $out ]] &&
-    out+="${_shelltone_bg_reset}${_shelltone_fg}${SHELLTONE_FADE_FG}m%}▓▒░${_shelltone_fg_reset}"
+  [[ -n $out && -n $SHELLTONE_LEFT_FADE ]] &&
+    out+="${_shelltone_bg_reset}${_shelltone_fg}${SHELLTONE_FADE_FG}m%}${SHELLTONE_LEFT_FADE}${_shelltone_fg_reset}"
   REPLY=$out
 }
 
 function _shelltone_render_right() {
-  local out="${_shelltone_fg}${SHELLTONE_FADE_FG}m%}░▒▓${_shelltone_fg_reset}" bg fg label i first=true
+  local out='' bg fg label i first=true
+  [[ -n $SHELLTONE_RIGHT_FADE ]] && out="${_shelltone_fg}${SHELLTONE_FADE_FG}m%}${SHELLTONE_RIGHT_FADE}${_shelltone_fg_reset}"
   for (( i = 1; i <= ${#_shelltone_right_parts}; i += 3 )); do
     bg=${_shelltone_right_parts[i]}
     fg=${_shelltone_right_parts[i + 1]}
     label=${_shelltone_right_parts[i + 2]}
-    out+="${_shelltone_bg}${bg}m%}"
+    _shelltone_bool "$SHELLTONE_SHOW_BAR" && out+="${_shelltone_bg}${bg}m%}"
     if [[ $first == false ]]; then
-      out+="${_shelltone_fg}${SHELLTONE_SEPARATOR_FG}m%}${SHELLTONE_RIGHT_SEPARATOR}"
+      out+="${_shelltone_fg}${SHELLTONE_SEPARATOR_FG}m%}${SHELLTONE_RIGHT_DIVIDER}"
     fi
     out+="${_shelltone_fg}${fg}m%} ${label} "
     first=false
@@ -346,8 +356,8 @@ function _shelltone_set_prompt() {
   _shelltone_render_right
   right=$REPLY
 
-  prefix="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}╭─${_shelltone_fg_reset}"
-  (( gap = COLUMNS - left_width - right_width - 8 ))
+  prefix="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_TOP_PREFIX}${_shelltone_fg_reset}"
+  (( gap = COLUMNS - left_width - right_width - ${#SHELLTONE_TOP_PREFIX} - 6 ))
   (( gap < 1 )) && gap=1
   printf -v gap_text '%*s' $gap ''
 
@@ -356,17 +366,17 @@ function _shelltone_set_prompt() {
     _shelltone_bool "$SHELLTONE_ADD_NEWLINE" && PROMPT+=$'\n'
     PROMPT+="${prefix}${left}${gap_text}${right}"$'\n'
     if (( _shelltone_last_status == 0 )); then
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}╰─${_shelltone_fg_reset} ${_shelltone_fg}76m%}>${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}76m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     else
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}╰─${_shelltone_fg_reset} ${_shelltone_fg}196m%}>${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}196m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     fi
   else
     PROMPT=''
     _shelltone_bool "$SHELLTONE_ADD_NEWLINE" && PROMPT+=$'\n'
     PROMPT+="${left} "
     (( _shelltone_last_status == 0 )) &&
-      PROMPT+="${_shelltone_fg}76m%}>${_shelltone_fg_reset} " ||
-      PROMPT+="${_shelltone_fg}196m%}>${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}76m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} " ||
+      PROMPT+="${_shelltone_fg}196m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     RPROMPT=$right
   fi
 }
@@ -407,11 +417,21 @@ function shelltone() {
         print -r -- "${theme:t:r}"
       done
       ;;
+    styles)
+      local layout
+      for layout in "$SHELLTONE_ROOT"/layouts/*.sh; do
+        print -r -- "${layout:t:r}"
+      done
+      ;;
+    install)
+      shift
+      command "$SHELLTONE_ROOT/bin/shelltone" install "$@"
+      ;;
     version|--version|-v)
       print -r -- "shelltone $SHELLTONE_VERSION"
       ;;
     help|--help|-h)
-      print -r -- 'usage: shelltone {configure|reload|aliases|themes|version|help}'
+      print -r -- 'usage: shelltone {configure|reload|aliases|themes|styles|install|version|help}'
       ;;
     *)
       print -u2 -r -- "shelltone: unknown command: $1"
