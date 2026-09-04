@@ -70,6 +70,9 @@ done
 cd "$previous_directory"
 
 local generated="$scratch/generated.sh" theme
+for style in frame pure zen blocks; do
+  [[ -r "$root/layouts/$style.sh" ]]
+done
 for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   "$root/bin/shelltone" configure --theme "$theme" --style frame --preset compact --output "$generated" >/dev/null
   zsh -n "$generated"
@@ -107,9 +110,14 @@ done
 
 local preview_output
 preview_output=$(print '2\n1\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
-[[ $preview_output == *$'\e[38;5;87m>⎇ main '* && $preview_output != *$'\e[1m ~/projects '* ]]
+[[ $preview_output == *$'\e[38;5;87m>⎇ main '* ]]
+[[ $(grep -c 'LIVE PREVIEW' <<< "$preview_output") -ge 11 ]]
 preview_output=$(print '1\n1\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *$'\e[1m ~/projects \e[22m'* ]]
+preview_output=$(print '4\n3\n1\nn' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+[[ $preview_output == *'northstar / zen'* && $preview_output == *'S H E L L T O N E'* ]]
+source "$scratch/preview.sh"
+[[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_SHOW_TIME == false ]]
 
 SHELLTONE_CONFIG="$scratch/active.sh"
 typeset +x SHELLTONE_CONFIG
