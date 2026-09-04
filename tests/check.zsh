@@ -109,15 +109,15 @@ for style in pure zen blocks; do
 done
 
 local preview_output
-preview_output=$(print '2\n1\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+preview_output=$(print '2\n1\n2\ny\ny\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *$'\e[38;5;87m>⎇ main '* ]]
 [[ $(grep -c 'LIVE PREVIEW' <<< "$preview_output") -ge 11 ]]
-preview_output=$(print '1\n1\n2\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+preview_output=$(print '1\n1\n2\ny\ny\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *$'\e[1m ~/projects \e[22m'* ]]
-preview_output=$(print '4\n3\n1\nn' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+preview_output=$(print '4\n3\n1\nn\nn\nn' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *'northstar / zen'* && $preview_output == *'S H E L L T O N E'* ]]
 source "$scratch/preview.sh"
-[[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_SHOW_TIME == false ]]
+[[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_SHOW_TIME == false && $SHELLTONE_SHOW_STATUS == false && $SHELLTONE_SHOW_DURATION == false ]]
 
 SHELLTONE_CONFIG="$scratch/active.sh"
 typeset +x SHELLTONE_CONFIG

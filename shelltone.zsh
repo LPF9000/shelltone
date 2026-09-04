@@ -16,6 +16,8 @@ typeset -g SHELLTONE_VERSION=0.1.0
 : ${SHELLTONE_TWO_LINES:=true}
 : ${SHELLTONE_ADD_NEWLINE:=true}
 : ${SHELLTONE_SHOW_TIME:=true}
+: ${SHELLTONE_SHOW_STATUS:=true}
+: ${SHELLTONE_SHOW_DURATION:=true}
 : ${SHELLTONE_TIME_FORMAT:=%I:%M:%S %p}
 : ${SHELLTONE_SHOW_CONTEXT:=auto}
 : ${SHELLTONE_SHOW_VENV:=true}
@@ -303,13 +305,15 @@ function _shelltone_build_parts() {
     _shelltone_left_parts+=($_shelltone_git_parts)
   fi
 
-  if (( _shelltone_last_status == 0 )); then
-    _shelltone_add_right $SHELLTONE_STATUS_BG $SHELLTONE_STATUS_OK_FG '✔'
-  else
-    _shelltone_add_right $SHELLTONE_STATUS_BG $SHELLTONE_STATUS_ERROR_FG "✘ ${_shelltone_last_status}"
+  if _shelltone_bool "$SHELLTONE_SHOW_STATUS"; then
+    if (( _shelltone_last_status == 0 )); then
+      _shelltone_add_right $SHELLTONE_STATUS_BG $SHELLTONE_STATUS_OK_FG '✔'
+    else
+      _shelltone_add_right $SHELLTONE_STATUS_BG $SHELLTONE_STATUS_ERROR_FG "✘ ${_shelltone_last_status}"
+    fi
   fi
 
-  if (( _shelltone_command_elapsed >= SHELLTONE_DURATION_THRESHOLD )); then
+  if _shelltone_bool "$SHELLTONE_SHOW_DURATION" && (( _shelltone_command_elapsed >= SHELLTONE_DURATION_THRESHOLD )); then
     local elapsed=${_shelltone_command_elapsed%.*}
     _shelltone_add_right $SHELLTONE_INFO_BG $SHELLTONE_DURATION_FG "${elapsed}s"
   fi
