@@ -11,6 +11,10 @@ for file in "$root/shelltone.zsh" "$root/shelltone-sandbox.zsh" "$root/bin/shell
   zsh -n "$file"
 done
 
+SHELLTONE_CONFIG="$scratch/initial.sh"
+print 'SHELLTONE_THEME=tenfold
+. "$SHELLTONE_ROOT/themes/$SHELLTONE_THEME.sh"
+. "$SHELLTONE_ROOT/layouts/frame.sh"' > "$SHELLTONE_CONFIG"
 source "$root/shelltone.zsh"
 source "$root/shelltone.zsh"
 source "$root/shelltone-aliases.sh"
@@ -113,13 +117,13 @@ for style in pure zen blocks; do
 done
 
 local preview_output
-preview_output=$(print '4\n2\n1\n1\n2\n1\n2\ny\ny\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+preview_output=$(print '4\n2\n1\n1\n2\n1\n2\n1\n1\n1' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *$'\e[38;5;87m>⎇ main '* ]]
 [[ $preview_output == *'DESIGN PATH'* && $preview_output == *'BAR TREATMENT'* && $preview_output == *'BAR SHADE'* ]]
 [[ $(grep -c 'LIVE PREVIEW' <<< "$preview_output") -ge 14 ]]
 [[ $preview_output == *'YOUR CHOICE'* && $preview_output == *'› '* ]]
 ! grep -q 'civis' "$root/bin/shelltone-configure"
-preview_output=$(print '4\n1\n1\n1\ny\n2\n2\ny\ny\ny' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+preview_output=$(print '4\n1\n1\n1\n1\n2\n2\n1\n1\n1' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *$'\e[1m ~/projects \e[22m'* ]]
 preview_output=$(print '4\n4\n3' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *'northstar / zen'* && $preview_output == *'S H E L L T O N E'* ]]
@@ -132,6 +136,7 @@ source "$scratch/preview.sh"
 [[ $SHELLTONE_DESIGN_PATH == still && $SHELLTONE_THEME == still && $SHELLTONE_PROMPT_STYLE == pure ]]
 [[ $SHELLTONE_SHOW_BAR == false && $SHELLTONE_SHOW_TIME == false && $SHELLTONE_SHOW_STATUS == false && $SHELLTONE_SHOW_DURATION == false ]]
 [[ $SHELLTONE_DIR_FG == 4 && $SHELLTONE_GIT_CLEAN_FG == 242 && $SHELLTONE_GIT_AHEAD_FG == 6 && $SHELLTONE_DURATION_FG == 3 && $SHELLTONE_STATUS_OK_FG == 5 && $SHELLTONE_STATUS_ERROR_FG == 1 ]]
+[[ $SHELLTONE_GIT_DETAIL == false && $SHELLTONE_PROMPT_SUCCESS_FG == 5 && $SHELLTONE_PROMPT_ERROR_FG == 1 ]]
 
 SHELLTONE_CONFIG="$scratch/active.sh"
 typeset +x SHELLTONE_CONFIG

@@ -9,6 +9,8 @@ for file in "$root/shelltone.bash" "$root/shelltone-bash-sandbox.sh" "$root/bin/
   bash -n "$file"
 done
 
+SHELLTONE_CONFIG="$scratch/initial.sh"
+printf '%s\n' 'SHELLTONE_THEME=tenfold' '. "$SHELLTONE_ROOT/themes/$SHELLTONE_THEME.sh"' '. "$SHELLTONE_ROOT/layouts/frame.sh"' > "$SHELLTONE_CONFIG"
 source "$root/shelltone.bash"
 source "$root/shelltone-aliases.sh"
 shelltone_aliases_enable starter
@@ -86,7 +88,7 @@ preview_output=$(printf '4\n4\n3\n' | "$root/bin/shelltone-configure" --output "
 source "$scratch/preview.sh"
 [[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_DESIGN_PATH == custom ]]
 
-preview_output=$(printf '1\n2\nn\n3\n2\nn\ny\nn\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+preview_output=$(printf '1\n2\n2\n3\n2\n2\n1\n2\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 source "$scratch/preview.sh"
 [[ $SHELLTONE_DESIGN_PATH == signal && $SHELLTONE_BAR_TREATMENT == stepped && $SHELLTONE_BAR_SEPARATED == false && $SHELLTONE_BAR_SHADE == deep ]]
 

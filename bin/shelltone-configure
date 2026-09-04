@@ -65,7 +65,7 @@ preview() {
   preview_status=${5:-$show_status}
   preview_duration=${6:-$show_duration}
   preview_treatment=${7:-${SHELLTONE_BAR_TREATMENT:-solid}}
-  preview_shade=${8:-${SHELLTONE_BAR_SHADE:-dark}}
+  preview_shade=${8:-palette}
   preview_separated=${9:-${SHELLTONE_BAR_SEPARATED:-true}}
   selected_treatment=${SHELLTONE_BAR_TREATMENT-}
   selected_shade=${SHELLTONE_BAR_SHADE-}
@@ -79,7 +79,7 @@ preview() {
     SHELLTONE_LEFT_DIVIDER=''
     SHELLTONE_RIGHT_DIVIDER=''
   fi
-  if [ "$SHELLTONE_SHOW_BAR" = true ]; then
+  if [ "$SHELLTONE_SHOW_BAR" = true ] && [ "$preview_shade" != palette ]; then
     case $preview_shade in
       soft) preview_bar=238; preview_soft=239; preview_mid=238; preview_deep=237 ;;
       deep) preview_bar=234; preview_soft=236; preview_mid=234; preview_deep=233 ;;
@@ -113,9 +113,16 @@ preview() {
     printf ' ~/projects '
   fi
   [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_GIT_CLEAN_BG"
-  printf '\033[38;5;%sm%s⎇ main \033[38;5;%sm⇡1 \033[38;5;%sm+2 \033[38;5;%sm!1 \033[38;5;%sm?1 \033[0m' \
-    "$SHELLTONE_GIT_CLEAN_FG" "$SHELLTONE_LEFT_DIVIDER" \
-    "$SHELLTONE_GIT_AHEAD_FG" "$SHELLTONE_GIT_STAGED_FG" "$SHELLTONE_GIT_CHANGED_FG" "$SHELLTONE_GIT_UNTRACKED_FG"
+  preview_git_icon='⎇ '
+  [ "${SHELLTONE_SHOW_GIT_ICON:-true}" = false ] && preview_git_icon=''
+  if [ "${SHELLTONE_GIT_DETAIL:-true}" = false ]; then
+    printf '\033[38;5;%sm%s%smain\033[38;5;%sm* \033[38;5;%sm⇡1 \033[0m' \
+      "$SHELLTONE_GIT_CLEAN_FG" "$SHELLTONE_LEFT_DIVIDER" "$preview_git_icon" "$SHELLTONE_GIT_DIRTY_FG" "$SHELLTONE_GIT_AHEAD_FG"
+  else
+    printf '\033[38;5;%sm%s⎇ main \033[38;5;%sm⇡1 \033[38;5;%sm+2 \033[38;5;%sm!1 \033[38;5;%sm?1 \033[0m' \
+      "$SHELLTONE_GIT_CLEAN_FG" "$SHELLTONE_LEFT_DIVIDER" \
+      "$SHELLTONE_GIT_AHEAD_FG" "$SHELLTONE_GIT_STAGED_FG" "$SHELLTONE_GIT_CHANGED_FG" "$SHELLTONE_GIT_UNTRACKED_FG"
+  fi
   printf '\033[38;5;%sm%s    %s\033[0m' "$SHELLTONE_FADE_FG" "$SHELLTONE_LEFT_FADE" "$SHELLTONE_RIGHT_FADE"
   [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_STATUS_BG"
   [ "$preview_status" = true ] && printf '\033[38;5;%sm ✔' "$SHELLTONE_STATUS_OK_FG"
@@ -123,7 +130,7 @@ preview() {
   [ "$preview_duration" = true ] && printf '\033[38;5;%sm%s4s' "$SHELLTONE_DURATION_FG" "$SHELLTONE_RIGHT_DIVIDER"
   [ "$preview_time" = true ] && printf '\033[38;5;%sm%s11:17 AM' "$SHELLTONE_TIME_FG" "$SHELLTONE_RIGHT_DIVIDER"
   printf '\033[0m\n'
-  [ "$preview_lines" = true ] && printf '  \033[38;5;%sm%s\033[0m \033[38;5;76m%s\033[0m \n' "$SHELLTONE_FRAME_COLOR" "$SHELLTONE_INPUT_PREFIX" "$SHELLTONE_PROMPT_SYMBOL"
+  [ "$preview_lines" = true ] && printf '  \033[38;5;%sm%s\033[0m \033[38;5;%sm%s\033[0m \n' "$SHELLTONE_FRAME_COLOR" "$SHELLTONE_INPUT_PREFIX" "${SHELLTONE_PROMPT_SUCCESS_FG:-76}" "$SHELLTONE_PROMPT_SYMBOL"
   rule
 }
 
@@ -186,7 +193,7 @@ if [ "$preset" = interactive ]; then
   printf '\n  '
   paint 255 '1  SIGNAL'
   paint 245 '  layered, Powerlevel-inspired presence'
-  preview tenfold blocks
+  preview tenfold frame
   printf '\n  '
   paint 255 '2  STILL'
   paint 245 '   faithful Pure-inspired restraint'
@@ -199,12 +206,13 @@ if [ "$preset" = interactive ]; then
   paint 255 '4  CUSTOM'
   paint 245 '  choose a palette and silhouette separately'
   rule
-  ask 'Type 1–4, then press Enter.  Default: no change'
+  ask 'Select 1–4.  Select 0 to exit.'
   case $answer in
-    1) design=signal; theme=tenfold; style=blocks ;;
+    1) design=signal; theme=tenfold; style=frame ;;
     2) design=still; theme=still; style=pure; two_lines=true; show_time=false; show_status=false; show_duration=false; add_newline=false ;;
     3) design=contour; theme=contour; style=zen; two_lines=true; show_time=false; show_status=false; show_duration=false; add_newline=false ;;
     4) design=custom ;;
+    0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
     *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
   esac
 
@@ -220,10 +228,11 @@ if [ "$preset" = interactive ]; then
   palette_option 5 harbor 'HARBOR'
   palette_option 6 sunset-strip 'SUNSET STRIP'
   rule
-  ask 'Type 1–6, then press Enter.  Default: no change'
+  ask 'Select 1–6.  Select 0 to exit.'
   case $answer in
     1) theme=tenfold ;; 2) theme=afterglow ;; 3) theme=night-shift ;;
     4) theme=northstar ;; 5) theme=harbor ;; 6) theme=sunset-strip ;;
+    0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
     *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
   esac
   screen
@@ -236,9 +245,10 @@ if [ "$preset" = interactive ]; then
   style_option 3 zen 'ZEN' 'sparse dividers for focused work'
   style_option 4 blocks 'BLOCKS' 'crisp, high-contrast segments'
   rule
-  ask 'Type 1–4, then press Enter.  Default: 1 (frame)'
-  case ${answer:-1} in
+  ask 'Select 1–4.  Select 0 to exit.'
+  case $answer in
     1) style=frame ;; 2) style=pure ;; 3) style=zen ;; 4) style=blocks ;;
+    0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
     *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
   esac
   fi
@@ -255,22 +265,41 @@ if [ "$preset" = interactive ]; then
     paint 245 '  layered fields with diagonal joins'
     preview "$theme" "$style" "$two_lines" false false false stepped "${SHELLTONE_BAR_SHADE:-dark}"
     rule
-    ask 'Type 1–2, then press Enter.  Default: 1 (solid)'
-    [ "${answer:-1}" = 2 ] && SHELLTONE_BAR_TREATMENT=stepped || SHELLTONE_BAR_TREATMENT=solid
+    ask 'Select 1–2.  Select 0 to exit.'
+    case $answer in
+      1) SHELLTONE_BAR_TREATMENT=solid ;;
+      2) SHELLTONE_BAR_TREATMENT=stepped ;;
+      0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
+      *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
+    esac
     screen
     paint 81 '  BAR JOIN'
-    printf '  Should the bar’s segments be visibly separated?\n'
-    preview "$theme" "$style" "$two_lines" false false false
-    ask 'Press Enter for separated, or type n for seamless'
-    case ${answer:-y} in n|N) SHELLTONE_BAR_SEPARATED=false ;; *) SHELLTONE_BAR_SEPARATED=true ;; esac
+    printf '  Choose a visible join or a seamless field.\n'
+    rule
+    paint 255 '  1  SEPARATED'
+    preview "$theme" "$style" "$two_lines" false false false "$SHELLTONE_BAR_TREATMENT" palette true
+    paint 255 '  2  SEAMLESS'
+    preview "$theme" "$style" "$two_lines" false false false "$SHELLTONE_BAR_TREATMENT" palette false
+    ask 'Select 1–2.  Select 0 to exit.'
+    case $answer in
+      1) SHELLTONE_BAR_SEPARATED=true ;;
+      2) SHELLTONE_BAR_SEPARATED=false ;;
+      0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
+      *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
+    esac
     screen
     paint 81 '  BAR SHADE'
     printf '  Choose the depth of the selected palette’s neutral field.\n'
     rule
-    paint 255 '  1  SOFT    2  DARK    3  DEEP'
+    paint 255 '  1  SOFT'
+    preview "$theme" "$style" "$two_lines" false false false "$SHELLTONE_BAR_TREATMENT" soft "$SHELLTONE_BAR_SEPARATED"
+    paint 255 '  2  DARK'
+    preview "$theme" "$style" "$two_lines" false false false "$SHELLTONE_BAR_TREATMENT" dark "$SHELLTONE_BAR_SEPARATED"
+    paint 255 '  3  DEEP'
+    preview "$theme" "$style" "$two_lines" false false false "$SHELLTONE_BAR_TREATMENT" deep "$SHELLTONE_BAR_SEPARATED"
     rule
-    ask 'Type 1–3, then press Enter.  Default: 2 (dark)'
-    case ${answer:-2} in 1) SHELLTONE_BAR_SHADE=soft ;; 2) SHELLTONE_BAR_SHADE=dark ;; 3) SHELLTONE_BAR_SHADE=deep ;; *) printf '%s\n' 'No configuration was written.'; exit 1 ;; esac
+    ask 'Select 1–3.  Select 0 to exit.'
+    case $answer in 1) SHELLTONE_BAR_SHADE=soft ;; 2) SHELLTONE_BAR_SHADE=dark ;; 3) SHELLTONE_BAR_SHADE=deep ;; 0) printf '%s\n' 'No configuration was written.'; exit 0 ;; *) printf '%s\n' 'No configuration was written.'; exit 1 ;; esac
   fi
 
   if [ "$SHELLTONE_LAYOUT_DETAIL_CONTROLS" = true ]; then
@@ -282,26 +311,58 @@ if [ "$preset" = interactive ]; then
   preview "$theme" "$style" false false false false
   paint 255 '  2  TWO LINES'
   preview "$theme" "$style" true false false false
-  ask 'Type 1–2, then press Enter.  Default: 2 (two lines)'
-  [ "${answer:-2}" = 1 ] && { two_lines=false; add_newline=false; }
+  ask 'Select 1–2.  Select 0 to exit.'
+  case $answer in
+    1) two_lines=false; add_newline=false ;;
+    2) two_lines=true ;;
+    0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
+    *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
+  esac
   screen
   paint 81 '  CLOCK'
-  printf '  Your prompt so far. Add the current time on the right edge?\n'
+  printf '  Choose whether the current time appears at the right edge.\n'
+  rule
+  paint 255 '  1  SHOW CLOCK'
+  preview "$theme" "$style" "$two_lines" true false false
+  paint 255 '  2  HIDE CLOCK'
   preview "$theme" "$style" "$two_lines" false false false
-  ask 'Press Enter for yes, or type n for no'
-  case ${answer:-y} in n|N) show_time=false ;; esac
+  ask 'Select 1–2.  Select 0 to exit.'
+  case $answer in
+    1) show_time=true ;;
+    2) show_time=false ;;
+    0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
+    *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
+  esac
   screen
   paint 81 '  STATUS'
-  printf '  Your prompt so far. Add the success check or failure mark?\n'
+  printf '  Choose whether command success and failure are shown.\n'
+  rule
+  paint 255 '  1  SHOW STATUS'
+  preview "$theme" "$style" "$two_lines" "$show_time" true false
+  paint 255 '  2  HIDE STATUS'
   preview "$theme" "$style" "$two_lines" "$show_time" false false
-  ask 'Press Enter for yes, or type n for no'
-  case ${answer:-y} in n|N) show_status=false ;; esac
+  ask 'Select 1–2.  Select 0 to exit.'
+  case $answer in
+    1) show_status=true ;;
+    2) show_status=false ;;
+    0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
+    *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
+  esac
   screen
   paint 81 '  DURATION'
-  printf '  Your prompt so far. Add elapsed time for slower commands?\n'
+  printf '  Choose whether slower commands show their elapsed time.\n'
+  rule
+  paint 255 '  1  SHOW DURATION'
+  preview "$theme" "$style" "$two_lines" "$show_time" "$show_status" true
+  paint 255 '  2  HIDE DURATION'
   preview "$theme" "$style" "$two_lines" "$show_time" "$show_status" false
-  ask 'Press Enter for yes, or type n for no'
-  case ${answer:-y} in n|N) show_duration=false ;; esac
+  ask 'Select 1–2.  Select 0 to exit.'
+  case $answer in
+    1) show_duration=true ;;
+    2) show_duration=false ;;
+    0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
+    *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
+  esac
   fi
   restore_screen
   trap - EXIT HUP INT TERM

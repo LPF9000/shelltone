@@ -68,6 +68,7 @@ typeset -g SHELLTONE_VERSION=0.1.0
 : ${SHELLTONE_GIT_CHANGED_FG:=215}
 : ${SHELLTONE_GIT_UNTRACKED_FG:=203}
 : ${SHELLTONE_GIT_ICON:=⎇}
+: ${SHELLTONE_GIT_DETAIL:=true}
 : ${SHELLTONE_SHOW_DIR_ICONS:=false}
 : ${SHELLTONE_SHOW_GIT_ICON:=true}
 : ${SHELLTONE_INFO_BG:=$SHELLTONE_BAR_BG}
@@ -77,6 +78,8 @@ typeset -g SHELLTONE_VERSION=0.1.0
 : ${SHELLTONE_STATUS_BG:=$SHELLTONE_BAR_BG}
 : ${SHELLTONE_STATUS_OK_FG:=70}
 : ${SHELLTONE_STATUS_ERROR_FG:=160}
+: ${SHELLTONE_PROMPT_SUCCESS_FG:=76}
+: ${SHELLTONE_PROMPT_ERROR_FG:=196}
 
 autoload -Uz add-zsh-hook
 zmodload zsh/datetime 2>/dev/null || true
@@ -213,13 +216,18 @@ function _shelltone_git() {
 
   _shelltone_git_parts=()
   _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CLEAN_FG "${prefix}${branch}" false)
+  if ! _shelltone_bool "$SHELLTONE_GIT_DETAIL" && (( staged + changed + untracked > 0 )); then
+    _shelltone_git_parts+=($SHELLTONE_GIT_DIRTY_BG $SHELLTONE_GIT_DIRTY_FG '*' false)
+  fi
   (( behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_BEHIND_FG "⇣${behind}" false)
   (( ahead > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_AHEAD_FG "⇡${ahead}" false)
   (( push_behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PUSH_BEHIND_FG "⇠${push_behind}" false)
   (( push_ahead > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PUSH_AHEAD_FG "⇢${push_ahead}" false)
-  (( staged > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_STAGED_FG "+${staged}" false)
-  (( changed > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CHANGED_FG "!${changed}" false)
-  (( untracked > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_UNTRACKED_FG "?${untracked}" false)
+  if _shelltone_bool "$SHELLTONE_GIT_DETAIL"; then
+    (( staged > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_STAGED_FG "+${staged}" false)
+    (( changed > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CHANGED_FG "!${changed}" false)
+    (( untracked > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_UNTRACKED_FG "?${untracked}" false)
+  fi
   return 0
 }
 
@@ -410,17 +418,17 @@ function _shelltone_set_prompt() {
     fi
     PROMPT+=$'\n'
     if (( _shelltone_last_status == 0 )); then
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}76m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     else
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}196m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     fi
   else
     PROMPT=''
     _shelltone_bool "$SHELLTONE_ADD_NEWLINE" && PROMPT+=$'\n'
     PROMPT+="${left} "
     (( _shelltone_last_status == 0 )) &&
-      PROMPT+="${_shelltone_fg}76m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} " ||
-      PROMPT+="${_shelltone_fg}196m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} " ||
+      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     RPROMPT=$right
   fi
 }
