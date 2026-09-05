@@ -9,6 +9,9 @@ export SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh
 : "${SHELLTONE_BAR_BG:=236}"
 : "${SHELLTONE_PROMPT_STYLE:=frame}"
 : "${SHELLTONE_SHOW_BAR:=true}"
+: "${SHELLTONE_BAR_TREATMENT:=solid}"
+: "${SHELLTONE_BAR_SHADE:=dark}"
+: "${SHELLTONE_BAR_SEPARATED:=true}"
 : "${SHELLTONE_LEFT_DIVIDER:=>}"
 : "${SHELLTONE_RIGHT_DIVIDER:=·}"
 : "${SHELLTONE_LEFT_FADE:=▓▒░}"
@@ -45,6 +48,27 @@ _shelltone_bash_reset='\[\e[0m\]'
 _shelltone_bash_bold='\[\e[1m\]'
 _shelltone_bash_bold_reset='\[\e[22m\]'
 
+_shelltone_bash_apply_bar_treatment() {
+  [[ $SHELLTONE_SHOW_BAR == true ]] || return 0
+  local base=$SHELLTONE_BAR_BG soft=$SHELLTONE_BAR_BG mid=$SHELLTONE_BAR_BG deep=$SHELLTONE_BAR_BG
+  case ${SHELLTONE_BAR_SHADE,,} in
+    soft) base=238; soft=239; mid=238; deep=237 ;;
+    dark) base=236; soft=238; mid=236; deep=235 ;;
+    deep) base=234; soft=236; mid=234; deep=233 ;;
+  esac
+  SHELLTONE_BAR_BG=$base
+  SHELLTONE_DIR_BG=$base
+  SHELLTONE_GIT_CLEAN_BG=$base
+  SHELLTONE_INFO_BG=$base
+  SHELLTONE_STATUS_BG=$base
+  if [[ ${SHELLTONE_BAR_TREATMENT,,} == stepped ]]; then
+    SHELLTONE_DIR_BG=$mid
+    SHELLTONE_GIT_CLEAN_BG=$soft
+    SHELLTONE_INFO_BG=$mid
+    SHELLTONE_STATUS_BG=$deep
+  fi
+}
+
 _shelltone_bash_git() {
   local branch porcelain line index worktree counts upstream_ref push_ref behind=0 ahead=0 push_behind=0 push_ahead=0 staged=0 changed=0 untracked=0
   branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null) || branch="@$(git rev-parse --short HEAD 2>/dev/null)" || return 1
@@ -77,18 +101,19 @@ _shelltone_bash_git() {
 
 _shelltone_bash_precmd() {
   local status=$? dir status_fg clock='' git=''
+  _shelltone_bash_apply_bar_treatment
   [[ -n ${SHELLTONE_PREVIOUS_PROMPT_COMMAND-} ]] && eval "$SHELLTONE_PREVIOUS_PROMPT_COMMAND"
   dir=${PWD/#$HOME/~}
-  _shelltone_bash_git && git=" $SHELLTONE_BASH_GIT"
+  _shelltone_bash_git && git="$(_shelltone_bash_bg "$SHELLTONE_GIT_CLEAN_BG") $SHELLTONE_BASH_GIT"
   (( status == 0 )) && status_fg=$SHELLTONE_STATUS_OK_FG || status_fg=$SHELLTONE_STATUS_ERROR_FG
   [[ $SHELLTONE_SHOW_TIME == true ]] && clock=" $(_shelltone_bash_fg "$SHELLTONE_TIME_FG")$(date +"$SHELLTONE_TIME_FORMAT")"
   local dir_bold='' dir_bold_reset=''
   [[ $SHELLTONE_DIR_BOLD == true ]] && { dir_bold=${_shelltone_bash_bold}; dir_bold_reset=${_shelltone_bash_bold_reset}; }
   local bar='' fade=''
-  [[ $SHELLTONE_SHOW_BAR == true ]] && bar=$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")
+  [[ $SHELLTONE_SHOW_BAR == true ]] && bar=$(_shelltone_bash_bg "$SHELLTONE_DIR_BG")
   [[ -n $SHELLTONE_LEFT_FADE || -n $SHELLTONE_RIGHT_FADE ]] && fade="$(_shelltone_bash_fg "$SHELLTONE_FADE_FG")${SHELLTONE_LEFT_FADE}  ${SHELLTONE_RIGHT_FADE}"
   local status_segment=''
-  [[ $SHELLTONE_SHOW_STATUS == true ]] && status_segment="$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")"
+  [[ $SHELLTONE_SHOW_STATUS == true ]] && status_segment="$(_shelltone_bash_bg "$SHELLTONE_STATUS_BG")$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")"
   SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")${SHELLTONE_TOP_PREFIX}${bar}$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") ${dir_bold}$dir${dir_bold_reset}$git ${_shelltone_bash_reset}${fade}${bar}${status_segment}$clock${_shelltone_bash_reset}"
 }
 

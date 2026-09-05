@@ -30,6 +30,9 @@ typeset -g SHELLTONE_VERSION=0.1.0
 : ${SHELLTONE_SEPARATOR_FG:=244}
 : ${SHELLTONE_RIGHT_SEPARATOR:=·}
 : ${SHELLTONE_SHOW_BAR:=true}
+: ${SHELLTONE_BAR_TREATMENT:=solid}
+: ${SHELLTONE_BAR_SHADE:=dark}
+: ${SHELLTONE_BAR_SEPARATED:=true}
 : ${SHELLTONE_LEFT_DIVIDER:=>}
 : ${SHELLTONE_RIGHT_DIVIDER:=$SHELLTONE_RIGHT_SEPARATOR}
 : ${SHELLTONE_LEFT_FADE:=▓▒░}
@@ -95,6 +98,31 @@ function _shelltone_escape_prompt() {
 
 function _shelltone_bool() {
   [[ ${1:l} == (1|true|yes|on) ]]
+}
+
+function _shelltone_apply_bar_treatment() {
+  _shelltone_bool "$SHELLTONE_SHOW_BAR" || return 0
+  local base=$SHELLTONE_BAR_BG soft=$SHELLTONE_BAR_BG mid=$SHELLTONE_BAR_BG deep=$SHELLTONE_BAR_BG
+  case ${SHELLTONE_BAR_SHADE:l} in
+    soft) base=238; soft=239; mid=238; deep=237 ;;
+    dark) base=236; soft=238; mid=236; deep=235 ;;
+    deep) base=234; soft=236; mid=234; deep=233 ;;
+  esac
+  SHELLTONE_BAR_BG=$base
+  SHELLTONE_OS_BG=$base
+  SHELLTONE_DIR_BG=$base
+  SHELLTONE_GIT_CLEAN_BG=$base
+  SHELLTONE_GIT_DIRTY_BG=$base
+  SHELLTONE_INFO_BG=$base
+  SHELLTONE_STATUS_BG=$base
+  if [[ ${SHELLTONE_BAR_TREATMENT:l} == stepped ]]; then
+    SHELLTONE_OS_BG=$deep
+    SHELLTONE_DIR_BG=$mid
+    SHELLTONE_GIT_CLEAN_BG=$soft
+    SHELLTONE_GIT_DIRTY_BG=$soft
+    SHELLTONE_INFO_BG=$mid
+    SHELLTONE_STATUS_BG=$deep
+  fi
 }
 
 function _shelltone_add_left() {
@@ -203,7 +231,7 @@ function _shelltone_render_left() {
     label=${_shelltone_left_parts[i + 2]}
     bold=${_shelltone_left_parts[i + 3]}
     _shelltone_bool "$SHELLTONE_SHOW_BAR" && out+="${_shelltone_bg}${bg}m%}"
-    if [[ $first == false ]]; then
+    if [[ $first == false ]] && _shelltone_bool "$SHELLTONE_BAR_SEPARATED"; then
       out+="${_shelltone_fg}${SHELLTONE_SEPARATOR_FG}m%}${SHELLTONE_LEFT_DIVIDER}"
     fi
     icon=''
@@ -249,7 +277,7 @@ function _shelltone_render_right() {
     fg=${_shelltone_right_parts[i + 1]}
     label=${_shelltone_right_parts[i + 2]}
     _shelltone_bool "$SHELLTONE_SHOW_BAR" && out+="${_shelltone_bg}${bg}m%}"
-    if [[ $first == false ]]; then
+    if [[ $first == false ]] && _shelltone_bool "$SHELLTONE_BAR_SEPARATED"; then
       out+="${_shelltone_fg}${SHELLTONE_SEPARATOR_FG}m%}${SHELLTONE_RIGHT_DIVIDER}"
     fi
     out+="${_shelltone_fg}${fg}m%} ${label} "
@@ -264,8 +292,11 @@ function _shelltone_parts_width() {
   local width=0 i count=0
   for (( i = 3; i <= ${#parts}; i += 3 )); do
     (( width += ${#parts[i]} + 2 ))
-    (( count++ > 0 )) && (( width++ ))
+    if (( count++ > 0 )) && _shelltone_bool "$SHELLTONE_BAR_SEPARATED"; then
+      (( width += ${#SHELLTONE_RIGHT_DIVIDER} ))
+    fi
   done
+  (( width += ${#SHELLTONE_RIGHT_FADE} ))
   REPLY=$width
 }
 
@@ -284,8 +315,11 @@ function _shelltone_left_width() {
         (( width += SHELLTONE_FOLDER_ICON_WIDTH - 1 ))
         ;;
     esac
-    (( count++ > 0 )) && (( width++ ))
+    if (( count++ > 0 )) && _shelltone_bool "$SHELLTONE_BAR_SEPARATED"; then
+      (( width += ${#SHELLTONE_LEFT_DIVIDER} ))
+    fi
   done
+  (( width += ${#SHELLTONE_LEFT_FADE} ))
   REPLY=$width
 }
 
@@ -342,6 +376,7 @@ function _shelltone_build_parts() {
 
 function _shelltone_set_prompt() {
   local left right prefix gap gap_text left_width right_width
+  _shelltone_apply_bar_treatment
   _shelltone_build_parts
   _shelltone_left_width
   left_width=$REPLY
@@ -361,14 +396,19 @@ function _shelltone_set_prompt() {
   right=$REPLY
 
   prefix="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_TOP_PREFIX}${_shelltone_fg_reset}"
-  (( gap = COLUMNS - left_width - right_width - ${#SHELLTONE_TOP_PREFIX} - 6 ))
+  (( gap = COLUMNS - left_width - right_width - ${#SHELLTONE_TOP_PREFIX} ))
   (( gap < 1 )) && gap=1
   printf -v gap_text '%*s' $gap ''
 
   if _shelltone_bool "$SHELLTONE_TWO_LINES"; then
     PROMPT=''
     _shelltone_bool "$SHELLTONE_ADD_NEWLINE" && PROMPT+=$'\n'
-    PROMPT+="${prefix}${left}${gap_text}${right}"$'\n'
+    if _shelltone_bool "$SHELLTONE_SHOW_BAR"; then
+      PROMPT+="${prefix}${left}${_shelltone_bg}${SHELLTONE_BAR_BG}m%}${gap_text}${right}"
+    else
+      PROMPT+="${prefix}${left}${gap_text}${right}"
+    fi
+    PROMPT+=$'\n'
     if (( _shelltone_last_status == 0 )); then
       PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}76m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     else
