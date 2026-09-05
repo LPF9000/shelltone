@@ -12,7 +12,7 @@
 
 Shelltone is a dependency-free Bash and Zsh prompt with a little bit of retro glow and none of the usual font ceremony. It is for people who want a useful prompt—not a dashboard bolted to their shell. No Nerd Font, no Powerline glyphs, no plugin manager, and no framework required.
 
-It keeps the good parts close: the directory and Git branch on the left; command result, duration, jobs, environment, remote context, and clock on the right. When the terminal gets narrow, it quietly drops right-side details instead of wrapping your prompt into a mess.
+It keeps the good parts close: the directory and Git branch, with optional command result, duration, jobs, environment, remote context, and clock. Both shells drop optional details when space runs short. Zsh also measures display-cell widths and truncates an oversized left prompt.
 
 ## What it feels like
 
@@ -75,6 +75,20 @@ The Git segment reports only state that needs attention. Colors are theme-specif
 
 This makes `⇣21 ⇡27 ⇠21 ⇢27 +6 !12 ?1` readable without turning the prompt into a full status screen.
 
+Signal also distinguishes conflicts (`~`) and stashes (`*`), and shows an operation label such as `merge` or `rebase`. Still uses a dirty `*`, movement arrows without counts, and operation labels. Contour uses presence markers for added (`✓`), modified (`✶`), deleted (`✗`), renamed (`➜`), conflicted (`═`), and untracked (`✩`) files.
+
+Git refresh runs in the background in interactive shells. Zsh redraws when the result arrives; Bash applies it on the next prompt. Changing directories clears the previous directory's data. No automatic fetch is performed, so movement reflects locally known remote refs. Set `SHELLTONE_GIT_ASYNC=false` for synchronous refresh, `SHELLTONE_GIT_UNTRACKED=false` to skip untracked files, or `SHELLTONE_SHOW_GIT=false` to disable Git collection.
+
+## Preset behavior and integration
+
+Still shows the home-relative path; Contour shows the current directory name. Signal abbreviates parent components when the path is long, keeping the final directory name. This is a lightweight abbreviation, not unique-prefix completion. Override `SHELLTONE_PATH_MODE` with `full`, `basename`, or `auto` after the theme/layout assignments. Slow-command durations use readable hours, minutes, and seconds; Still and Contour use a five-second threshold.
+
+In Zsh, Signal and Still change the prompt symbol to `❮` when vi command mode is already enabled. Shelltone does not change editing key bindings. Set `SHELLTONE_TRANSIENT=true` to collapse submitted Zsh prompts to the prompt symbol; this is independent of blank-line spacing. The configuration command also accepts `--transient true`. Bash currently retains full previous prompts and its existing editing-mode behavior.
+
+For Oh My Zsh, set `ZSH_THEME=""` and source `shelltone.plugin.zsh` after loading Oh My Zsh, or link this checkout into `$ZSH_CUSTOM/plugins/shelltone` and add `shelltone` to the plugin list. Other managers can explicitly load the same plugin file. Enable only one prompt engine. Shelltone leaves syntax highlighting to your existing plugins; its optional custom highlighter is disabled by default and preserves other plugins' highlights.
+
+The Bash renderer requires Bash 4.4 or newer. Rendering uses ordinary Unicode and 256-color terminal support; a patched font is not required. Font fallback and emoji width still depend on the terminal. The automated tests cover wide-character accounting in Zsh, not the appearance of every installed font.
+
 ## Optional alias packs
 
 Shelltone never changes aliases unless asked. The sandbox enables the `starter` pack, which includes `ll`, `la`, `foldersize`, `projects`, and `reload`. Enable a pack explicitly in an existing shell:
@@ -106,4 +120,5 @@ Run the checks with:
 ```sh
 ./tests/check.bash
 ./tests/check.zsh
+python3 tests/test-runtime.py -v
 ```

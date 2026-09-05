@@ -25,9 +25,9 @@ shelltone_aliases_enable starter
 VIRTUAL_ENV=/tmp/demo/.venv
 _shelltone_last_status=7
 _shelltone_command_elapsed=4
-COLUMNS=120
+COLUMNS=180
 _shelltone_set_prompt
-[[ $PROMPT == *'✘ 7'* && $PROMPT == *'4s'* && $PROMPT == *'demo 🐍'* ]]
+[[ $PROMPT == *'✘ 7'* && $PROMPT == *'4s'* && $PROMPT == *'.venv 🐍'* ]]
 [[ $PROMPT == *'╭─'* && $PROMPT == *'╰─'* && $PROMPT == *'▓▒░'* && $PROMPT == *'░▒▓'* ]]
 [[ $PROMPT == *'⎇'* ]]
 
@@ -134,9 +134,9 @@ source "$scratch/preview.sh"
 preview_output=$(print '2' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 source "$scratch/preview.sh"
 [[ $SHELLTONE_DESIGN_PATH == still && $SHELLTONE_THEME == still && $SHELLTONE_PROMPT_STYLE == pure ]]
-[[ $SHELLTONE_SHOW_BAR == false && $SHELLTONE_SHOW_TIME == false && $SHELLTONE_SHOW_STATUS == false && $SHELLTONE_SHOW_DURATION == false ]]
+[[ $SHELLTONE_SHOW_BAR == false && $SHELLTONE_SHOW_TIME == false && $SHELLTONE_SHOW_STATUS == false && $SHELLTONE_SHOW_DURATION == true ]]
 [[ $SHELLTONE_DIR_FG == 81 && $SHELLTONE_GIT_CLEAN_FG == 250 && $SHELLTONE_GIT_AHEAD_FG == 159 && $SHELLTONE_DURATION_FG == 3 && $SHELLTONE_STATUS_OK_FG == 205 && $SHELLTONE_STATUS_ERROR_FG == 203 && $SHELLTONE_GIT_LABEL_STYLE == standard ]]
-[[ $SHELLTONE_GIT_DETAIL == false && $SHELLTONE_PROMPT_SUCCESS_FG == 205 && $SHELLTONE_PROMPT_ERROR_FG == 203 && $SHELLTONE_SYNTAX_HIGHLIGHT == true && $SHELLTONE_COMMAND_FG == 121 ]]
+[[ $SHELLTONE_GIT_DETAIL == false && $SHELLTONE_PROMPT_SUCCESS_FG == 205 && $SHELLTONE_PROMPT_ERROR_FG == 203 && $SHELLTONE_SYNTAX_HIGHLIGHT == false && $SHELLTONE_COMMAND_FG == 121 ]]
 
 # Theme reloads must clear identity settings from the previously selected path.
 source "$root/themes/contour.sh"
@@ -153,7 +153,7 @@ source "$generated"
 SHELLTONE_CONFIG="$scratch/active.sh"
 typeset +x SHELLTONE_CONFIG
 shelltone configure --theme still --style pure --preset compact >/dev/null
-[[ $SHELLTONE_THEME == still && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SYNTAX_HIGHLIGHT == true ]]
+[[ $SHELLTONE_THEME == still && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
 shelltone configure --theme tenfold --style frame --preset compact >/dev/null
 [[ $SHELLTONE_THEME == tenfold && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == true && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
 shelltone configure --theme harbor --preset compact >/dev/null
@@ -165,8 +165,8 @@ print 'SHELLTONE_THEME=tenfold
 . "$SHELLTONE_ROOT/layouts/frame.sh"' > "$scratch/sandbox.sh"
 local sandbox_config_hash
 sandbox_config_hash=$(sha256sum "$scratch/sandbox.sh")
-sandbox_output=$(print exit | env SHELLTONE_CONFIG="$scratch/sandbox.sh" "$root/bin/try-shelltone" --shell zsh 2>&1)
-[[ $sandbox_output == *'Shelltone sandbox'* && $sandbox_output == *'⎇'* ]]
+sandbox_output=$(print exit | env SHELLTONE_GIT_ASYNC=false SHELLTONE_CONFIG="$scratch/sandbox.sh" "$root/bin/try-shelltone" --shell zsh 2>&1)
+[[ $sandbox_output == *'Shelltone sandbox'* && $sandbox_output == *'╰─'* ]]
 [[ $(sha256sum "$scratch/sandbox.sh") == "$sandbox_config_hash" ]]
 
 local install_output

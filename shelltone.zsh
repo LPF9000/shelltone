@@ -8,6 +8,12 @@ typeset -gx SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shellton
 typeset -g SHELLTONE_VERSION=0.1.0
 
 [[ -r $SHELLTONE_CONFIG ]] && source "$SHELLTONE_CONFIG"
+source "$SHELLTONE_ROOT/shelltone-core.sh"
+: ${SHELLTONE_GIT_ASYNC:=true}
+: ${SHELLTONE_SHOW_GIT:=true}
+: ${SHELLTONE_PATH_MODE:=auto}
+: ${SHELLTONE_TRANSIENT:=false}
+: ${SHELLTONE_VI_MODE:=true}
 
 # Defaults also make the theme usable with a tiny or partially written config.
 : ${SHELLTONE_STYLE:=classic}
@@ -102,7 +108,8 @@ typeset -g _shelltone_bold=$'%{\e[1m%}'
 typeset -g _shelltone_bold_reset=$'%{\e[22m%}'
 
 function _shelltone_escape_prompt() {
-  REPLY=${1//\%/%%}
+  _shelltone_literal "$1"
+  REPLY=${REPLY//\%/%%}
 }
 
 function _shelltone_bool() {
@@ -115,12 +122,12 @@ function _shelltone_bool() {
 function _shelltone_syntax_highlight() {
   local remaining=${BUFFER-} match_start match_end offset=0
   local pattern='(^|[;|&][[:space:]]*)(cd|echo|touch|exit|git|ls|cat|mkdir|rm|cp|mv|pwd|clear|source|ssh|curl|make|npm|node|python|python3|docker|kubectl)([[:space:]]|$)'
-  region_highlight=()
+  region_highlight=("${(@)region_highlight:#* memo=shelltone}")
   _shelltone_bool "$SHELLTONE_SYNTAX_HIGHLIGHT" || return 0
   while [[ $remaining =~ $pattern ]]; do
     match_start=$(( offset + MBEGIN[2] - 1 ))
     match_end=$(( offset + MEND[2] ))
-    region_highlight+=("${match_start} ${match_end} fg=${SHELLTONE_COMMAND_FG},bold")
+    region_highlight+=("${match_start} ${match_end} fg=${SHELLTONE_COMMAND_FG},bold memo=shelltone")
     offset=$(( offset + MEND[0] ))
     remaining=${remaining[$(( MEND[0] + 1 )),-1]}
   done
@@ -179,10 +186,8 @@ function _shelltone_directory() {
     icon=$SHELLTONE_FOLDER_ICON
     icon_width=$SHELLTONE_FOLDER_ICON_WIDTH
   fi
-  local max=$SHELLTONE_MAX_DIR_LENGTH
-  if (( ${#shown} > max )); then
-    shown="...${shown[-$((max - 3)),-1]}"
-  fi
+  _shelltone_path
+  shown=$REPLY
   if _shelltone_bool "$SHELLTONE_SHOW_DIR_ICONS" && [[ -n $icon ]]; then
     REPLY="${icon}${SHELLTONE_DIR_ICON_GAP}${shown}"
   else
@@ -190,66 +195,56 @@ function _shelltone_directory() {
   fi
 }
 
-function _shelltone_git() {
-  local root branch porcelain ahead=0 behind=0 push_ahead=0 push_behind=0 prefix=''
-  local upstream_ref='' push_ref=''
-  local staged=0 changed=0 untracked=0 line index worktree
-  root=$(command git rev-parse --show-toplevel 2>/dev/null) || return 1
-  branch=$(command git symbolic-ref --quiet --short HEAD 2>/dev/null) ||
-    branch="@$(command git rev-parse --short HEAD 2>/dev/null)"
-  porcelain=$(command git status --porcelain --untracked-files=normal 2>/dev/null)
-  local counts
-  counts=$(command git rev-list --left-right --count '@{upstream}...HEAD' 2>/dev/null) || counts=''
-  if [[ -n $counts ]]; then
-    behind=${counts%%[[:space:]]*}
-    ahead=${counts##*[[:space:]]}
-    :
-  fi
-  upstream_ref=$(command git rev-parse --symbolic-full-name '@{upstream}' 2>/dev/null) || upstream_ref=''
-  push_ref=$(command git rev-parse --symbolic-full-name '@{push}' 2>/dev/null) || push_ref=''
-  if [[ -n $push_ref && $push_ref != $upstream_ref ]]; then
-    counts=$(command git rev-list --left-right --count '@{push}...HEAD' 2>/dev/null) || counts=''
-    if [[ -n $counts ]]; then
-      push_behind=${counts%%[[:space:]]*}
-      push_ahead=${counts##*[[:space:]]}
-    fi
-  fi
-  if _shelltone_bool "$SHELLTONE_SHOW_GIT_ICON" && [[ -n $SHELLTONE_GIT_ICON ]]; then
-    prefix="${SHELLTONE_GIT_ICON}  "
-  fi
-  while IFS= read -r line; do
-    [[ -z $line ]] && continue
-    if [[ ${line[1,2]} == '??' ]]; then
-      (( ++untracked ))
-      continue
-    fi
-    index=${line[1]}
-    worktree=${line[2]}
-    [[ $index != ' ' ]] && (( ++staged ))
-    [[ $worktree != ' ' ]] && (( ++changed ))
-  done <<< "$porcelain"
+function _shelltone_git_segment() {
+  _shelltone_escape_prompt "$2"
+  _shelltone_git_parts+=("$SHELLTONE_GIT_CLEAN_BG" "$1" "$REPLY" false)
+}
 
+function _shelltone_git() {
   _shelltone_git_parts=()
-  if [[ ${SHELLTONE_GIT_LABEL_STYLE:l} == purity ]]; then
-    _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PREFIX_FG 'git' false)
-    _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_COLON_FG ':' false)
-    _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_BRANCH_FG "$branch" false)
-  else
-    _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CLEAN_FG "${prefix}${branch}" false)
+  if [[ ${_shelltone_git_cached_only:-false} != true ]]; then
+    if [[ -o interactive ]] && _shelltone_bool "$SHELLTONE_GIT_ASYNC"; then
+      _shelltone_git_update
+    else
+      _shelltone_git_collect
+    fi
   fi
-  if ! _shelltone_bool "$SHELLTONE_GIT_DETAIL" && (( staged + changed + untracked > 0 )); then
-    _shelltone_git_parts+=($SHELLTONE_GIT_DIRTY_BG $SHELLTONE_GIT_DIRTY_FG '*' false)
+  _shelltone_git_segments
+}
+
+function _shelltone_git_close() {
+  if [[ -n ${_shelltone_git_fd-} ]]; then
+    zle -F "$_shelltone_git_fd" 2>/dev/null
+    exec {_shelltone_git_fd}<&-
+    unset _shelltone_git_fd
   fi
-  (( behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_BEHIND_FG "⇣${behind}" false)
-  (( ahead > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_AHEAD_FG "⇡${ahead}" false)
-  (( push_behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PUSH_BEHIND_FG "⇠${push_behind}" false)
-  (( push_ahead > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PUSH_AHEAD_FG "⇢${push_ahead}" false)
-  if _shelltone_bool "$SHELLTONE_GIT_DETAIL"; then
-    (( staged > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_STAGED_FG "+${staged}" false)
-    (( changed > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CHANGED_FG "!${changed}" false)
-    (( untracked > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_UNTRACKED_FG "?${untracked}" false)
+}
+
+function _shelltone_git_ready() {
+  local request_dir=$_shelltone_git_request_dir
+  local request_epoch=$_shelltone_git_request_epoch
+  _shelltone_git_read <&$_shelltone_git_fd || true
+  _shelltone_git_close
+  if [[ $request_dir != "$PWD" || $SHELLTONE_SHOW_GIT != true || $request_epoch != ${_shelltone_git_epoch:-0} ]]; then
+    _shelltone_git_clear
+    _shelltone_git_update
   fi
-  return 0
+  _shelltone_git_cache_dir=$PWD
+  local _shelltone_git_cached_only=true
+  _shelltone_set_prompt
+  zle reset-prompt 2>/dev/null || true
+}
+
+function _shelltone_git_update() {
+  if [[ ${_shelltone_git_cache_dir-} != "$PWD" || $SHELLTONE_SHOW_GIT != true ]]; then
+    _shelltone_git_clear
+    _shelltone_git_cache_dir=$PWD
+  fi
+  [[ $SHELLTONE_SHOW_GIT == true && -z ${_shelltone_git_fd-} ]] || return 0
+  _shelltone_git_request_dir=$PWD
+  _shelltone_git_request_epoch=${_shelltone_git_epoch:-0}
+  exec {_shelltone_git_fd}< <(_shelltone_git_collect; _shelltone_git_write)
+  zle -F "$_shelltone_git_fd" _shelltone_git_ready
 }
 
 function _shelltone_render_left() {
@@ -382,7 +377,12 @@ function _shelltone_build_parts() {
 
   if _shelltone_bool "$SHELLTONE_SHOW_DURATION" && (( _shelltone_command_elapsed >= SHELLTONE_DURATION_THRESHOLD )); then
     local elapsed=${_shelltone_command_elapsed%.*}
-    _shelltone_add_right $SHELLTONE_INFO_BG $SHELLTONE_DURATION_FG "${elapsed}s"
+    _shelltone_duration "$elapsed"
+    if [[ $SHELLTONE_PROMPT_STYLE == pure ]]; then
+      _shelltone_add_left $SHELLTONE_INFO_BG $SHELLTONE_DURATION_FG "$REPLY" false
+    else
+      _shelltone_add_right $SHELLTONE_INFO_BG $SHELLTONE_DURATION_FG "$REPLY"
+    fi
   fi
 
   (( ${#jobstates} > 0 )) &&
@@ -390,7 +390,7 @@ function _shelltone_build_parts() {
 
   if _shelltone_bool "$SHELLTONE_SHOW_VENV"; then
     if [[ -n ${VIRTUAL_ENV-} ]]; then
-      local venv_name=${VIRTUAL_ENV:h:t}
+      local venv_name=${VIRTUAL_ENV_PROMPT:-${VIRTUAL_ENV:t}}
       _shelltone_add_right $SHELLTONE_INFO_BG $SHELLTONE_INFO_FG "${venv_name} ${SHELLTONE_VENV_ICON}"
     elif [[ -n ${CONDA_DEFAULT_ENV-} ]]; then
       _shelltone_add_right $SHELLTONE_INFO_BG $SHELLTONE_INFO_FG "conda ${CONDA_DEFAULT_ENV}"
@@ -407,26 +407,50 @@ function _shelltone_build_parts() {
   fi
 }
 
+# Zsh's prompt-width condition accounts for wide characters and zero-width escapes.
+function _shelltone_display_width() {
+  local COLUMNS=100000
+  local lo=0 hi=$(( ${#1} * 2 + 1 )) mid probe
+  while (( lo < hi )); do
+    mid=$(( (lo + hi + 1) / 2 ))
+    probe="$1%${mid}(l.y.n)"
+    if [[ ${(%)probe} == *y ]]; then lo=$mid; else hi=$((mid - 1)); fi
+  done
+  REPLY=$lo
+}
+
 function _shelltone_set_prompt() {
   local left right prefix gap gap_text left_width right_width
+  local symbol=$SHELLTONE_PROMPT_SYMBOL
+  if _shelltone_bool "$SHELLTONE_VI_MODE" && [[ ${KEYMAP-} == vicmd ]]; then symbol=❮; fi
+  (( COLUMNS > 0 )) || COLUMNS=80
+  RPROMPT=
   _shelltone_apply_bar_treatment
   _shelltone_build_parts
-  _shelltone_left_width
+  _shelltone_render_left
+  left=$REPLY
+  _shelltone_display_width "$left"
   left_width=$REPLY
-  _shelltone_parts_width _shelltone_right_parts
+  _shelltone_render_right
+  right=$REPLY
+  _shelltone_display_width "$right"
   right_width=$REPLY
 
   # Keep right-prompt details from colliding with the left side.
   while (( ${#_shelltone_right_parts} && left_width + right_width + 9 > COLUMNS )); do
     _shelltone_right_parts[-3,-1]=()
-    _shelltone_parts_width _shelltone_right_parts
+    _shelltone_render_right
+    right=$REPLY
+    _shelltone_display_width "$right"
     right_width=$REPLY
   done
 
-  _shelltone_render_left
-  left=$REPLY
-  _shelltone_render_right
-  right=$REPLY
+  if (( left_width > COLUMNS - 5 )); then
+    local limit=$(( COLUMNS > 8 ? COLUMNS - 5 : 3 ))
+    left="%${limit}<…<${left}%<<"
+    _shelltone_display_width "$left"
+    left_width=$REPLY
+  fi
 
   prefix="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_TOP_PREFIX}${_shelltone_fg_reset}"
   (( gap = COLUMNS - left_width - right_width - ${#SHELLTONE_TOP_PREFIX} ))
@@ -439,23 +463,41 @@ function _shelltone_set_prompt() {
     if _shelltone_bool "$SHELLTONE_SHOW_BAR" && [[ ${SHELLTONE_BAR_TREATMENT:l} == solid ]]; then
       PROMPT+="${prefix}${left}${_shelltone_bg}${SHELLTONE_BAR_BG}m%}${gap_text}${right}"
     else
-      PROMPT+="${prefix}${left}${gap_text}${right}"
+      if [[ $SHELLTONE_SHOW_BAR == false ]]; then
+        PROMPT+="${prefix}${left}${right}"
+      else
+        PROMPT+="${prefix}${left}${gap_text}${right}"
+      fi
     fi
     PROMPT+=$'\n'
     if (( _shelltone_last_status == 0 )); then
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${symbol}${_shelltone_fg_reset} "
     else
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${symbol}${_shelltone_fg_reset} "
     fi
   else
     PROMPT=''
     _shelltone_bool "$SHELLTONE_ADD_NEWLINE" && PROMPT+=$'\n'
     PROMPT+="${left} "
     (( _shelltone_last_status == 0 )) &&
-      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} " ||
-      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${symbol}${_shelltone_fg_reset} " ||
+      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${symbol}${_shelltone_fg_reset} "
     RPROMPT=$right
   fi
+  PROMPT+="${_shelltone_bg_reset}${_shelltone_fg_reset}"
+}
+
+function _shelltone_keymap() {
+  local _shelltone_git_cached_only=true
+  _shelltone_set_prompt
+  zle reset-prompt
+}
+
+function _shelltone_transient() {
+  [[ $SHELLTONE_TRANSIENT == true && -n ${BUFFER-} ]] || return 0
+  PROMPT="${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+  RPROMPT=
+  zle reset-prompt
 }
 
 function _shelltone_preexec() {
@@ -464,6 +506,7 @@ function _shelltone_preexec() {
 
 function _shelltone_precmd() {
   _shelltone_last_status=$?
+  _shelltone_git_epoch=$(( ${_shelltone_git_epoch:-0} + 1 ))
   if (( _shelltone_command_started > 0 )); then
     (( _shelltone_command_elapsed = ${EPOCHREALTIME:-$SECONDS} - _shelltone_command_started ))
   else
@@ -481,6 +524,8 @@ function shelltone() {
       ;;
     reload)
       source "$SHELLTONE_CONFIG"
+      _shelltone_git_epoch=$(( ${_shelltone_git_epoch:-0} + 1 ))
+      _shelltone_git_clear
       _shelltone_set_prompt
       ;;
     aliases)
@@ -518,10 +563,17 @@ function shelltone() {
 }
 
 if [[ -o interactive ]]; then
-  setopt prompt_subst
+  # All prompt data is assembled before expansion; command substitution is unnecessary.
+  unsetopt prompt_subst
   autoload -Uz add-zle-hook-widget
   add-zle-hook-widget -D line-pre-redraw _shelltone_syntax_highlight 2>/dev/null || true
   add-zle-hook-widget line-pre-redraw _shelltone_syntax_highlight
+  add-zle-hook-widget -D keymap-select _shelltone_keymap 2>/dev/null || true
+  add-zle-hook-widget keymap-select _shelltone_keymap
+  add-zle-hook-widget -D line-finish _shelltone_transient 2>/dev/null || true
+  add-zle-hook-widget line-finish _shelltone_transient
+  add-zsh-hook -D zshexit _shelltone_git_close 2>/dev/null || true
+  add-zsh-hook zshexit _shelltone_git_close
   add-zsh-hook -D preexec _shelltone_preexec 2>/dev/null || true
   add-zsh-hook -D precmd _shelltone_precmd 2>/dev/null || true
   add-zsh-hook preexec _shelltone_preexec
