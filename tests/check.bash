@@ -80,6 +80,8 @@ done
 
 preview_output=$(printf '4\n3\n1\nn\nn\nn\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *'northstar / zen'* && $preview_output == *'S H E L L T O N E'* ]]
+[[ $preview_output == *'YOUR CHOICE'* && $preview_output == *'› '* ]]
+! grep -q 'civis' "$root/bin/shelltone-configure"
 source "$scratch/preview.sh"
 [[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_SHOW_TIME == false && $SHELLTONE_SHOW_STATUS == false && $SHELLTONE_SHOW_DURATION == false ]]
 

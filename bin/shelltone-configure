@@ -41,7 +41,19 @@ restore_screen() {
 
 screen() {
   [ "$fullscreen" = true ] && tput clear 2>/dev/null || true
+  tput cnorm 2>/dev/null || true
   title
+}
+
+ask() {
+  printf '\n'
+  paint 81 '  YOUR CHOICE'
+  printf '  '
+  paint 255 "$1"
+  printf '\n  '
+  paint 110 '› '
+  printf '\033[0m'
+  IFS= read -r answer || answer=''
 }
 
 preview() {
@@ -129,7 +141,6 @@ fi
 if [ "$preset" = interactive ]; then
   if [ -t 0 ] && [ -t 1 ] && tput smcup 2>/dev/null; then
     fullscreen=true
-    tput civis 2>/dev/null || true
     trap 'restore_screen' EXIT HUP INT TERM
   fi
   screen
@@ -143,8 +154,7 @@ if [ "$preset" = interactive ]; then
   palette_option 5 harbor 'HARBOR'
   palette_option 6 sunset-strip 'SUNSET STRIP'
   rule
-  printf '%s' '  Palette [1-6]: '
-  IFS= read -r answer
+  ask 'Type 1–6, then press Enter.  Default: no change'
   case $answer in
     1) theme=tenfold ;; 2) theme=afterglow ;; 3) theme=night-shift ;;
     4) theme=northstar ;; 5) theme=harbor ;; 6) theme=sunset-strip ;;
@@ -160,8 +170,7 @@ if [ "$preset" = interactive ]; then
   style_option 3 zen 'ZEN' 'sparse dividers for focused work'
   style_option 4 blocks 'BLOCKS' 'crisp, high-contrast segments'
   rule
-  printf '%s' '  Style [1-4]: '
-  IFS= read -r answer
+  ask 'Type 1–4, then press Enter.  Default: 1 (frame)'
   case ${answer:-1} in
     1) style=frame ;; 2) style=pure ;; 3) style=zen ;; 4) style=blocks ;;
     *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
@@ -174,32 +183,28 @@ if [ "$preset" = interactive ]; then
   preview "$theme" "$style" false "$show_time" "$show_status" "$show_duration"
   paint 255 '  2  TWO LINES'
   preview "$theme" "$style" true "$show_time" "$show_status" "$show_duration"
-  printf '%s' '  Height [1-2, default 2]: '
-  IFS= read -r answer
+  ask 'Type 1–2, then press Enter.  Default: 2 (two lines)'
   [ "${answer:-2}" = 1 ] && { two_lines=false; add_newline=false; }
   screen
   paint 81 '  CLOCK'
   printf '  Keep the current time on the right edge?\n'
   preview "$theme" "$style" "$two_lines" false "$show_status" "$show_duration"
   preview "$theme" "$style" "$two_lines" true "$show_status" "$show_duration"
-  printf '%s' '  Show a clock? [Y/n]: '
-  IFS= read -r answer
+  ask 'Press Enter for yes, or type n for no'
   case ${answer:-y} in n|N) show_time=false ;; esac
   screen
   paint 81 '  STATUS'
   printf '  Show the success check or failure mark?\n'
   preview "$theme" "$style" "$two_lines" "$show_time" false "$show_duration"
   preview "$theme" "$style" "$two_lines" "$show_time" true "$show_duration"
-  printf '%s' '  Show command status? [Y/n]: '
-  IFS= read -r answer
+  ask 'Press Enter for yes, or type n for no'
   case ${answer:-y} in n|N) show_status=false ;; esac
   screen
   paint 81 '  DURATION'
   printf '  Show elapsed time for slower commands?\n'
   preview "$theme" "$style" "$two_lines" "$show_time" "$show_status" false
   preview "$theme" "$style" "$two_lines" "$show_time" "$show_status" true
-  printf '%s' '  Show command duration? [Y/n]: '
-  IFS= read -r answer
+  ask 'Press Enter for yes, or type n for no'
   case ${answer:-y} in n|N) show_duration=false ;; esac
   restore_screen
   trap - EXIT HUP INT TERM
