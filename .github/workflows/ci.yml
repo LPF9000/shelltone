@@ -20,6 +20,18 @@ jobs:
         shell: [bash, zsh]
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Verify prompt resources
+        run: |
+          test -x bin/shelltone
+          test -x bin/shelltone-configure
+          test -x bin/shelltone-install
+          test -r layouts/frame.sh
+          test -r layouts/pure.sh
+          test -r layouts/zen.sh
+          test -r layouts/blocks.sh
+          git diff --check origin/main...HEAD
       - name: Install Zsh
         if: matrix.shell == 'zsh'
         run: sudo apt-get update && sudo apt-get install --yes zsh

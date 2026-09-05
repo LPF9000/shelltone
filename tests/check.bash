@@ -48,6 +48,9 @@ _shelltone_bash_git
 [[ $SHELLTONE_BASH_GIT != *'⇢'* && $SHELLTONE_BASH_GIT != *'⇠'* ]]
 cd "$previous_directory"
 generated="$scratch/generated.sh"
+for style in frame pure zen blocks; do
+  [[ -r "$root/layouts/$style.sh" ]]
+done
 for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   "$root/bin/shelltone" configure --theme "$theme" --style frame --preset compact --output "$generated" >/dev/null
   bash -n "$generated"
@@ -74,6 +77,11 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
     [[ $SHELLTONE_DIR_BOLD == false && $SHELLTONE_BASH_TOP != *"${_shelltone_bash_bold}"* ]]
   fi
 done
+
+preview_output=$(printf '4\n3\n1\nn\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+[[ $preview_output == *'northstar / zen'* && $preview_output == *'S H E L L T O N E'* ]]
+source "$scratch/preview.sh"
+[[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_SHOW_TIME == false ]]
 
 for style in pure zen blocks; do
   "$root/bin/shelltone" configure --theme afterglow --style "$style" --preset compact --output "$generated" >/dev/null

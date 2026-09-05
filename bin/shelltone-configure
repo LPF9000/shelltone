@@ -34,12 +34,14 @@ title() {
 }
 
 preview() {
-  . "$root/themes/$theme.sh"
-  . "$root/layouts/$style.sh"
+  preview_theme=$1
+  preview_style=$2
+  . "$root/themes/$preview_theme.sh"
+  . "$root/layouts/$preview_style.sh"
   printf '\n'
   paint 110 '  LIVE PREVIEW'
   printf '  '
-  paint 245 "$theme / $style"
+  paint 245 "$preview_theme / $preview_style"
   printf '\n'
   printf '  \033[38;5;%sm%s\033[0m' "$SHELLTONE_FRAME_COLOR" "$SHELLTONE_TOP_PREFIX"
   [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_BAR_BG"
@@ -51,7 +53,7 @@ preview() {
   fi
   printf '\033[38;5;%sm%s⎇ main \033[38;5;%sm⇡1 \033[38;5;%sm+2 \033[38;5;%sm!1 \033[38;5;%sm?1 \033[0m' \
     "$SHELLTONE_GIT_CLEAN_FG" "$SHELLTONE_LEFT_DIVIDER" \
-    "$SHELLTONE_GIT_CLEAN_FG" "$SHELLTONE_GIT_AHEAD_FG" "$SHELLTONE_GIT_STAGED_FG" "$SHELLTONE_GIT_CHANGED_FG" "$SHELLTONE_GIT_UNTRACKED_FG"
+    "$SHELLTONE_GIT_AHEAD_FG" "$SHELLTONE_GIT_STAGED_FG" "$SHELLTONE_GIT_CHANGED_FG" "$SHELLTONE_GIT_UNTRACKED_FG"
   printf '\033[38;5;%sm%s    %s\033[0m' "$SHELLTONE_FADE_FG" "$SHELLTONE_LEFT_FADE" "$SHELLTONE_RIGHT_FADE"
   [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_BAR_BG"
   printf '\033[38;5;%sm ✔' "$SHELLTONE_STATUS_OK_FG"
@@ -59,6 +61,27 @@ preview() {
   printf '\033[0m\n'
   [ "$two_lines" = true ] && printf '  \033[38;5;%sm%s\033[0m \033[38;5;76m%s\033[0m \n' "$SHELLTONE_FRAME_COLOR" "$SHELLTONE_INPUT_PREFIX" "$SHELLTONE_PROMPT_SYMBOL"
   rule
+}
+
+palette_option() {
+  number=$1
+  option_theme=$2
+  label=$3
+  printf '\n  '
+  paint 255 "$number  $label"
+  preview "$option_theme" frame
+}
+
+style_option() {
+  number=$1
+  option_style=$2
+  label=$3
+  description=$4
+  printf '\n  '
+  paint 255 "$number  $label"
+  printf '  '
+  paint 245 "$description"
+  preview "$theme" "$option_style"
 }
 
 while [ "$#" -gt 0 ]; do
@@ -88,21 +111,14 @@ fi
 if [ "$preset" = interactive ]; then
   title
   paint 81 '  PALETTE'
-  printf '  Choose the color story.\n'
+  printf '  Choose a color story from a full prompt preview.\n'
   rule
-  printf '  '
-  paint 39 '1  TENFOLD'
-  printf '       '
-  paint 213 '2  AFTERGLOW'
-  printf '       '
-  paint 75 '3  NIGHT SHIFT'
-  printf '\n  '
-  paint 117 '4  NORTHSTAR'
-  printf '      '
-  paint 109 '5  HARBOR'
-  printf '          '
-  paint 209 '6  SUNSET STRIP'
-  printf '\n'
+  palette_option 1 tenfold 'TENFOLD'
+  palette_option 2 afterglow 'AFTERGLOW'
+  palette_option 3 night-shift 'NIGHT SHIFT'
+  palette_option 4 northstar 'NORTHSTAR'
+  palette_option 5 harbor 'HARBOR'
+  palette_option 6 sunset-strip 'SUNSET STRIP'
   rule
   printf '%s' '  Palette [1-6]: '
   IFS= read -r answer
@@ -113,12 +129,12 @@ if [ "$preset" = interactive ]; then
   esac
   printf '\n'
   paint 81 '  SHAPE'
-  printf '  Choose the silhouette.\n'
+  printf '  See each silhouette in the palette you selected.\n'
   rule
-  printf '  1  FRAME   shaded bar, rails, and fades\n'
-  printf '  2  PURE    quiet text with room to breathe\n'
-  printf '  3  ZEN     sparse dividers for focused work\n'
-  printf '  4  BLOCKS  crisp, high-contrast segments\n'
+  style_option 1 frame 'FRAME' 'shaded bar, rails, and fades'
+  style_option 2 pure 'PURE' 'quiet text with room to breathe'
+  style_option 3 zen 'ZEN' 'sparse dividers for focused work'
+  style_option 4 blocks 'BLOCKS' 'crisp, high-contrast segments'
   rule
   printf '%s' '  Style [1-4]: '
   IFS= read -r answer
@@ -126,17 +142,17 @@ if [ "$preset" = interactive ]; then
     1) style=frame ;; 2) style=pure ;; 3) style=zen ;; 4) style=blocks ;;
     *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
   esac
-  preview
+  preview "$theme" "$style"
   paint 81 '  HEIGHT'
   printf '  1) compact  2) two lines [2]: '
   IFS= read -r answer
   [ "${answer:-2}" = 1 ] && { two_lines=false; show_time=false; add_newline=false; }
-  preview
+  preview "$theme" "$style"
   paint 81 '  CLOCK'
   printf '  Show a clock? [Y/n]: '
   IFS= read -r answer
   case ${answer:-y} in n|N) show_time=false ;; esac
-  preview
+  preview "$theme" "$style"
 fi
 
 mkdir -p "$(dirname "$output")"
