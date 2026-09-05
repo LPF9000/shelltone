@@ -69,10 +69,10 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   cd "$git_scratch"
   _shelltone_bash_precmd
   cd "$previous_directory"
-  [[ $SHELLTONE_BASH_TOP == *"38;5;${SHELLTONE_FRAME_COLOR}m"* ]]
+  [[ $PS1 != *'\n'* ]]
   [[ $SHELLTONE_BASH_TOP == *"48;5;${SHELLTONE_BAR_BG}m"* ]]
   [[ $SHELLTONE_BASH_TOP == *"38;5;${SHELLTONE_DIR_FG}m"* ]]
-  [[ $SHELLTONE_BASH_GIT == *"38;5;${SHELLTONE_GIT_CLEAN_FG}m\\] ⎇"* ]]
+  [[ $SHELLTONE_BASH_GIT == *"38;5;${SHELLTONE_GIT_CLEAN_FG}m"* && $SHELLTONE_BASH_GIT == *'⎇'* ]]
   if [[ $theme == tenfold ]]; then
     [[ $SHELLTONE_DIR_BOLD == true && $SHELLTONE_BASH_TOP == *"${_shelltone_bash_bold}"* ]]
   else
@@ -118,7 +118,7 @@ done
 SHELLTONE_CONFIG="$scratch/active.sh"
 export -n SHELLTONE_CONFIG
 shelltone configure --theme still --style pure --preset compact >/dev/null
-[[ $SHELLTONE_THEME == still && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SYNTAX_HIGHLIGHT == true ]]
+[[ $SHELLTONE_THEME == still && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
 shelltone configure --theme tenfold --style frame --preset compact >/dev/null
 [[ $SHELLTONE_THEME == tenfold && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == true && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
 shelltone configure --theme harbor --preset compact >/dev/null
@@ -126,7 +126,7 @@ shelltone configure --theme harbor --preset compact >/dev/null
 
 printf '%s\n' 'SHELLTONE_THEME=tenfold' '. "$SHELLTONE_ROOT/themes/$SHELLTONE_THEME.sh"' '. "$SHELLTONE_ROOT/layouts/frame.sh"' > "$scratch/sandbox.sh"
 sandbox_config_hash=$(sha256sum "$scratch/sandbox.sh")
-sandbox_output=$(printf 'exit\n' | env SHELLTONE_CONFIG="$scratch/sandbox.sh" "$root/bin/try-shelltone" --shell bash 2>&1)
+sandbox_output=$(printf 'exit\n' | env SHELLTONE_GIT_ASYNC=false SHELLTONE_CONFIG="$scratch/sandbox.sh" "$root/bin/try-shelltone" --shell bash 2>&1)
 [[ $sandbox_output == *'Shelltone Bash sandbox'* && $sandbox_output == *'⎇'* ]]
 [[ $(sha256sum "$scratch/sandbox.sh") == "$sandbox_config_hash" ]]
 

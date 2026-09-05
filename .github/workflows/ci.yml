@@ -37,3 +37,6 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --yes zsh
       - name: Run checks
         run: ./tests/check.${{ matrix.shell }}
+      - name: Check prompt lifecycles
+        if: matrix.shell == 'zsh'
+        run: python3 tests/test-runtime.py -v
