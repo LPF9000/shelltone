@@ -33,6 +33,12 @@ export SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh
 : "${SHELLTONE_GIT_STAGED_FG:=75}"
 : "${SHELLTONE_GIT_CHANGED_FG:=215}"
 : "${SHELLTONE_GIT_UNTRACKED_FG:=203}"
+: "${SHELLTONE_GIT_DIRTY_FG:=220}"
+: "${SHELLTONE_GIT_DETAIL:=true}"
+: "${SHELLTONE_GIT_LABEL_STYLE:=standard}"
+: "${SHELLTONE_GIT_PREFIX_FG:=$SHELLTONE_GIT_CLEAN_FG}"
+: "${SHELLTONE_GIT_COLON_FG:=$SHELLTONE_SEPARATOR_FG}"
+: "${SHELLTONE_GIT_BRANCH_FG:=$SHELLTONE_GIT_CLEAN_FG}"
 : "${SHELLTONE_INFO_FG:=39}"
 : "${SHELLTONE_TIME_FG:=66}"
 : "${SHELLTONE_STATUS_OK_FG:=70}"
@@ -88,14 +94,24 @@ _shelltone_bash_git() {
     [[ $index != ' ' ]] && ((++staged))
     [[ $worktree != ' ' ]] && ((++changed))
   done <<< "$porcelain"
-  SHELLTONE_BASH_GIT="$(_shelltone_bash_fg "$SHELLTONE_GIT_CLEAN_FG") ⎇  $branch"
+  if [[ ${SHELLTONE_GIT_LABEL_STYLE,,} == purity ]]; then
+    SHELLTONE_BASH_GIT="$(_shelltone_bash_fg "$SHELLTONE_GIT_PREFIX_FG") git$(_shelltone_bash_fg "$SHELLTONE_GIT_COLON_FG"):$(_shelltone_bash_fg "$SHELLTONE_GIT_BRANCH_FG")$branch"
+  else
+    local git_prefix='⎇  '
+    [[ ${SHELLTONE_SHOW_GIT_ICON:-true} == true ]] || git_prefix=''
+    SHELLTONE_BASH_GIT="$(_shelltone_bash_fg "$SHELLTONE_GIT_CLEAN_FG") ${git_prefix}$branch"
+  fi
   (( behind > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_BEHIND_FG") ⇣$behind"
   (( ahead > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_AHEAD_FG") ⇡$ahead"
   (( push_behind > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_PUSH_BEHIND_FG") ⇠$push_behind"
   (( push_ahead > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_PUSH_AHEAD_FG") ⇢$push_ahead"
-  (( staged > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_STAGED_FG") +$staged"
-  (( changed > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_CHANGED_FG") !$changed"
-  (( untracked > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_UNTRACKED_FG") ?$untracked"
+  if [[ $SHELLTONE_GIT_DETAIL == true ]]; then
+    (( staged > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_STAGED_FG") +$staged"
+    (( changed > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_CHANGED_FG") !$changed"
+    (( untracked > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_UNTRACKED_FG") ?$untracked"
+  elif (( staged + changed + untracked > 0 )); then
+    SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_DIRTY_FG") *"
+  fi
   return 0
 }
 
@@ -115,6 +131,7 @@ _shelltone_bash_precmd() {
   local status_segment=''
   [[ $SHELLTONE_SHOW_STATUS == true ]] && status_segment="$(_shelltone_bash_bg "$SHELLTONE_STATUS_BG")$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")"
   SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")${SHELLTONE_TOP_PREFIX}${bar}$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") ${dir_bold}$dir${dir_bold_reset}$git ${_shelltone_bash_reset}${fade}${bar}${status_segment}$clock${_shelltone_bash_reset}"
+  SHELLTONE_BASH_INPUT="$(_shelltone_bash_fg "$status_fg")${SHELLTONE_INPUT_PREFIX} ${SHELLTONE_PROMPT_SYMBOL}${_shelltone_bash_reset} "
 }
 
 shelltone() {
@@ -130,4 +147,4 @@ shelltone() {
 
 SHELLTONE_PREVIOUS_PROMPT_COMMAND=${PROMPT_COMMAND-}
 PROMPT_COMMAND=_shelltone_bash_precmd
-PS1='${SHELLTONE_BASH_TOP}\n${SHELLTONE_INPUT_PREFIX} ${SHELLTONE_PROMPT_SYMBOL} '
+PS1='${SHELLTONE_BASH_TOP}\n${SHELLTONE_BASH_INPUT}'

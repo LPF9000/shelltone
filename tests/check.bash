@@ -9,6 +9,8 @@ for file in "$root/shelltone.bash" "$root/shelltone-bash-sandbox.sh" "$root/bin/
   bash -n "$file"
 done
 
+SHELLTONE_CONFIG="$scratch/initial.sh"
+printf '%s\n' 'SHELLTONE_THEME=tenfold' '. "$SHELLTONE_ROOT/themes/$SHELLTONE_THEME.sh"' '. "$SHELLTONE_ROOT/layouts/frame.sh"' > "$SHELLTONE_CONFIG"
 source "$root/shelltone.bash"
 source "$root/shelltone-aliases.sh"
 shelltone_aliases_enable starter
@@ -86,14 +88,20 @@ preview_output=$(printf '4\n4\n3\n' | "$root/bin/shelltone-configure" --output "
 source "$scratch/preview.sh"
 [[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_DESIGN_PATH == custom ]]
 
-preview_output=$(printf '1\n2\nn\n3\n2\nn\ny\nn\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+preview_output=$(printf '1\n2\n3\n2\n2\n1\n2\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 source "$scratch/preview.sh"
-[[ $SHELLTONE_DESIGN_PATH == signal && $SHELLTONE_BAR_TREATMENT == stepped && $SHELLTONE_BAR_SEPARATED == false && $SHELLTONE_BAR_SHADE == deep ]]
+[[ $SHELLTONE_DESIGN_PATH == signal && $SHELLTONE_BAR_TREATMENT == solid && $SHELLTONE_BAR_SEPARATED == false && $SHELLTONE_BAR_SHADE == deep ]]
 
 preview_output=$(printf '2\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 source "$scratch/preview.sh"
 [[ $SHELLTONE_DESIGN_PATH == still && $SHELLTONE_THEME == still && $SHELLTONE_PROMPT_STYLE == pure ]]
-[[ $SHELLTONE_DIR_FG == 4 && $SHELLTONE_GIT_CLEAN_FG == 242 && $SHELLTONE_GIT_AHEAD_FG == 6 && $SHELLTONE_DURATION_FG == 3 && $SHELLTONE_STATUS_OK_FG == 5 && $SHELLTONE_STATUS_ERROR_FG == 1 ]]
+[[ $SHELLTONE_DIR_FG == 81 && $SHELLTONE_GIT_CLEAN_FG == 250 && $SHELLTONE_GIT_AHEAD_FG == 159 && $SHELLTONE_DURATION_FG == 3 && $SHELLTONE_STATUS_OK_FG == 205 && $SHELLTONE_STATUS_ERROR_FG == 203 && $SHELLTONE_GIT_LABEL_STYLE == standard ]]
+
+source "$root/themes/contour.sh"
+source "$root/layouts/zen.sh"
+[[ $SHELLTONE_GIT_LABEL_STYLE == purity && $SHELLTONE_SHOW_GIT_ICON == false ]]
+source "$scratch/preview.sh"
+[[ $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == false && $SHELLTONE_GIT_DETAIL == false ]]
 
 for style in pure zen blocks; do
   "$root/bin/shelltone" configure --theme afterglow --style "$style" --preset compact --output "$generated" >/dev/null
@@ -107,7 +115,8 @@ export -n SHELLTONE_CONFIG
 shelltone configure --theme harbor --preset compact >/dev/null
 [[ $SHELLTONE_THEME == harbor && $SHELLTONE_TWO_LINES == false ]]
 
-sandbox_output=$(printf 'exit\n' | "$root/bin/try-shelltone" --shell bash 2>&1)
+printf '%s\n' 'SHELLTONE_THEME=tenfold' '. "$SHELLTONE_ROOT/themes/$SHELLTONE_THEME.sh"' '. "$SHELLTONE_ROOT/layouts/frame.sh"' > "$scratch/sandbox.sh"
+sandbox_output=$(printf 'exit\n' | env SHELLTONE_CONFIG="$scratch/sandbox.sh" "$root/bin/try-shelltone" --shell bash 2>&1)
 [[ $sandbox_output == *'Shelltone Bash sandbox'* && $sandbox_output == *'⎇'* ]]
 
 install_output=$(ZDOTDIR="$scratch/zdot" "$root/bin/shelltone" install zsh --dry-run)
