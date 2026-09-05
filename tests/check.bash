@@ -103,6 +103,11 @@ source "$root/layouts/zen.sh"
 source "$scratch/preview.sh"
 [[ $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == false && $SHELLTONE_GIT_DETAIL == false ]]
 
+"$root/bin/shelltone" configure --theme tenfold --style frame --preset compact --output "$generated" >/dev/null
+source "$generated"
+[[ $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == true ]]
+[[ $SHELLTONE_PROMPT_SUCCESS_FG == 76 && $SHELLTONE_PROMPT_ERROR_FG == 196 && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
+
 for style in pure zen blocks; do
   "$root/bin/shelltone" configure --theme afterglow --style "$style" --preset compact --output "$generated" >/dev/null
   source "$generated"
@@ -112,12 +117,18 @@ done
 
 SHELLTONE_CONFIG="$scratch/active.sh"
 export -n SHELLTONE_CONFIG
+shelltone configure --theme still --style pure --preset compact >/dev/null
+[[ $SHELLTONE_THEME == still && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SYNTAX_HIGHLIGHT == true ]]
+shelltone configure --theme tenfold --style frame --preset compact >/dev/null
+[[ $SHELLTONE_THEME == tenfold && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == true && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
 shelltone configure --theme harbor --preset compact >/dev/null
 [[ $SHELLTONE_THEME == harbor && $SHELLTONE_TWO_LINES == false ]]
 
 printf '%s\n' 'SHELLTONE_THEME=tenfold' '. "$SHELLTONE_ROOT/themes/$SHELLTONE_THEME.sh"' '. "$SHELLTONE_ROOT/layouts/frame.sh"' > "$scratch/sandbox.sh"
+sandbox_config_hash=$(sha256sum "$scratch/sandbox.sh")
 sandbox_output=$(printf 'exit\n' | env SHELLTONE_CONFIG="$scratch/sandbox.sh" "$root/bin/try-shelltone" --shell bash 2>&1)
 [[ $sandbox_output == *'Shelltone Bash sandbox'* && $sandbox_output == *'⎇'* ]]
+[[ $(sha256sum "$scratch/sandbox.sh") == "$sandbox_config_hash" ]]
 
 install_output=$(ZDOTDIR="$scratch/zdot" "$root/bin/shelltone" install zsh --dry-run)
 [[ $install_output == *"would append Shelltone to $scratch/zdot/.zshrc" ]]

@@ -24,6 +24,18 @@ Every theme should show Git state with a shared vocabulary: `⇣` and `⇡` for 
 - Add a Figlet-style, slanted Shelltone banner for the first-run experience and installer, with a compact plain-text fallback for narrow terminals.
 - Add theme screenshots generated from the sandbox for visual regression review.
 
+## Prompt compatibility hardening
+
+Use the established prompt ecosystems as a continuing review set before expanding Shelltone behavior:
+
+- **State isolation:** every theme and layout must explicitly establish its full rendering state, so switching paths in a live shell cannot retain a previous path's colors, Git format, prompt symbol, or syntax treatment.
+- **Sandbox isolation:** `try-shelltone` must copy all writable configuration and history into its temporary directory. Add regression coverage proving that a configure session cannot alter the source configuration.
+- **Immediate application:** `shelltone configure` must redraw the selected prompt in the current shell without requiring a manual reload. Exercise transitions between every curated path and Custom in both Bash and Zsh checks.
+- **Graceful integration:** document source ordering for Oh My Zsh and other prompt frameworks, detect incompatible prompt ownership where practical, and degrade optional integrations to an empty segment instead of failing.
+- **Terminal capability fallbacks:** keep ordinary Unicode as the baseline; test narrow terminals, non-TTY setup, limited color support, and missing optional shell facilities.
+- **Responsive Git state:** profile prompt redraws in large repositories, cache or defer expensive Git work, and retain a fast synchronous fallback when asynchronous work is unavailable.
+- **Visual contracts:** preserve snapshot-like ANSI previews for every numbered wizard choice and add scenario checks for colors, prompt symbol state, bar treatment, and right-edge behavior.
+
 ## Prompt styles
 
 Palette themes and prompt styles are deliberately separate. A palette controls color; a style controls the bar, frames, dividers, fades, clock treatment, and prompt glyph. The initial set is **frame**, **pure**, **zen**, and **blocks**. Future styles should stay font-independent and should be recognizable at a glance without copying another prompt's exact composition.
