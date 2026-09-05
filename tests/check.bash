@@ -80,6 +80,7 @@ done
 
 preview_output=$(printf '4\n3\n1\nn\nn\nn\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *'northstar / zen'* && $preview_output == *'S H E L L T O N E'* ]]
+[[ $(grep -c 'Your prompt so far' <<< "$preview_output") == 3 ]]
 [[ $preview_output == *'YOUR CHOICE'* && $preview_output == *'› '* ]]
 ! grep -q 'civis' "$root/bin/shelltone-configure"
 source "$scratch/preview.sh"

@@ -118,6 +118,7 @@ preview_output=$(print '1\n1\n2\ny\ny\ny' | "$root/bin/shelltone-configure" --ou
 [[ $preview_output == *$'\e[1m ~/projects \e[22m'* ]]
 preview_output=$(print '4\n3\n1\nn\nn\nn' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *'northstar / zen'* && $preview_output == *'S H E L L T O N E'* ]]
+[[ $(grep -c 'Your prompt so far' <<< "$preview_output") == 3 ]]
 source "$scratch/preview.sh"
 [[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_SHOW_TIME == false && $SHELLTONE_SHOW_STATUS == false && $SHELLTONE_SHOW_DURATION == false ]]
 
