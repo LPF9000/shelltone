@@ -78,13 +78,22 @@ for theme in tenfold afterglow night-shift northstar harbor sunset-strip; do
   fi
 done
 
-preview_output=$(printf '4\n3\n1\nn\nn\nn\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+preview_output=$(printf '4\n4\n3\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *'northstar / zen'* && $preview_output == *'S H E L L T O N E'* ]]
-[[ $(grep -c 'Your prompt so far' <<< "$preview_output") == 3 ]]
+[[ $preview_output == *'DESIGN PATH'* && $preview_output != *'BAR TREATMENT'* && $preview_output != *'CLOCK'* ]]
 [[ $preview_output == *'YOUR CHOICE'* && $preview_output == *'› '* ]]
 ! grep -q 'civis' "$root/bin/shelltone-configure"
 source "$scratch/preview.sh"
-[[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_SHOW_TIME == false && $SHELLTONE_SHOW_STATUS == false && $SHELLTONE_SHOW_DURATION == false ]]
+[[ $SHELLTONE_THEME == northstar && $SHELLTONE_PROMPT_STYLE == zen && $SHELLTONE_DESIGN_PATH == custom ]]
+
+preview_output=$(printf '1\n2\nn\n3\n2\nn\ny\nn\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+source "$scratch/preview.sh"
+[[ $SHELLTONE_DESIGN_PATH == signal && $SHELLTONE_BAR_TREATMENT == stepped && $SHELLTONE_BAR_SEPARATED == false && $SHELLTONE_BAR_SHADE == deep ]]
+
+preview_output=$(printf '2\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+source "$scratch/preview.sh"
+[[ $SHELLTONE_DESIGN_PATH == still && $SHELLTONE_THEME == still && $SHELLTONE_PROMPT_STYLE == pure ]]
+[[ $SHELLTONE_DIR_FG == 4 && $SHELLTONE_GIT_CLEAN_FG == 242 && $SHELLTONE_GIT_AHEAD_FG == 6 && $SHELLTONE_DURATION_FG == 3 && $SHELLTONE_STATUS_OK_FG == 5 && $SHELLTONE_STATUS_ERROR_FG == 1 ]]
 
 for style in pure zen blocks; do
   "$root/bin/shelltone" configure --theme afterglow --style "$style" --preset compact --output "$generated" >/dev/null

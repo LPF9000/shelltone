@@ -6,6 +6,7 @@ output=${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}
 theme=tenfold
 style=frame
 preset=interactive
+design=custom
 
 usage() {
   printf '%s\n' 'usage: shelltone configure [--theme NAME] [--style frame|pure|zen|blocks] [--preset classic|compact] [--output FILE]'
@@ -63,27 +64,62 @@ preview() {
   preview_time=${4:-$show_time}
   preview_status=${5:-$show_status}
   preview_duration=${6:-$show_duration}
+  preview_treatment=${7:-${SHELLTONE_BAR_TREATMENT:-solid}}
+  preview_shade=${8:-${SHELLTONE_BAR_SHADE:-dark}}
+  preview_separated=${9:-${SHELLTONE_BAR_SEPARATED:-true}}
+  selected_treatment=${SHELLTONE_BAR_TREATMENT-}
+  selected_shade=${SHELLTONE_BAR_SHADE-}
+  selected_separated=${SHELLTONE_BAR_SEPARATED-}
   . "$root/themes/$preview_theme.sh"
   . "$root/layouts/$preview_style.sh"
+  [ -n "$selected_treatment" ] && SHELLTONE_BAR_TREATMENT=$selected_treatment
+  [ -n "$selected_shade" ] && SHELLTONE_BAR_SHADE=$selected_shade
+  [ -n "$selected_separated" ] && SHELLTONE_BAR_SEPARATED=$selected_separated
+  if [ "$preview_separated" = false ]; then
+    SHELLTONE_LEFT_DIVIDER=''
+    SHELLTONE_RIGHT_DIVIDER=''
+  fi
+  if [ "$SHELLTONE_SHOW_BAR" = true ]; then
+    case $preview_shade in
+      soft) preview_bar=238; preview_soft=239; preview_mid=238; preview_deep=237 ;;
+      deep) preview_bar=234; preview_soft=236; preview_mid=234; preview_deep=233 ;;
+      *) preview_bar=236; preview_soft=238; preview_mid=236; preview_deep=235 ;;
+    esac
+    SHELLTONE_BAR_BG=$preview_bar
+    SHELLTONE_OS_BG=$preview_bar
+    SHELLTONE_DIR_BG=$preview_bar
+    SHELLTONE_GIT_CLEAN_BG=$preview_bar
+    SHELLTONE_INFO_BG=$preview_bar
+    SHELLTONE_STATUS_BG=$preview_bar
+    if [ "$preview_treatment" = stepped ]; then
+      SHELLTONE_OS_BG=$preview_deep
+      SHELLTONE_DIR_BG=$preview_mid
+      SHELLTONE_GIT_CLEAN_BG=$preview_soft
+      SHELLTONE_INFO_BG=$preview_mid
+      SHELLTONE_STATUS_BG=$preview_deep
+    fi
+  fi
   printf '\n'
   paint 110 '  LIVE PREVIEW'
   printf '  '
   paint 245 "$preview_theme / $preview_style"
   printf '\n'
   printf '  \033[38;5;%sm%s\033[0m' "$SHELLTONE_FRAME_COLOR" "$SHELLTONE_TOP_PREFIX"
-  [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_BAR_BG"
+  [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_DIR_BG"
   printf '\033[38;5;%sm' "$SHELLTONE_DIR_FG"
   if [ "$SHELLTONE_DIR_BOLD" = true ]; then
     printf '\033[1m ~/projects \033[22m'
   else
     printf ' ~/projects '
   fi
+  [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_GIT_CLEAN_BG"
   printf '\033[38;5;%sm%s⎇ main \033[38;5;%sm⇡1 \033[38;5;%sm+2 \033[38;5;%sm!1 \033[38;5;%sm?1 \033[0m' \
     "$SHELLTONE_GIT_CLEAN_FG" "$SHELLTONE_LEFT_DIVIDER" \
     "$SHELLTONE_GIT_AHEAD_FG" "$SHELLTONE_GIT_STAGED_FG" "$SHELLTONE_GIT_CHANGED_FG" "$SHELLTONE_GIT_UNTRACKED_FG"
   printf '\033[38;5;%sm%s    %s\033[0m' "$SHELLTONE_FADE_FG" "$SHELLTONE_LEFT_FADE" "$SHELLTONE_RIGHT_FADE"
-  [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_BAR_BG"
+  [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_STATUS_BG"
   [ "$preview_status" = true ] && printf '\033[38;5;%sm ✔' "$SHELLTONE_STATUS_OK_FG"
+  [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_INFO_BG"
   [ "$preview_duration" = true ] && printf '\033[38;5;%sm%s4s' "$SHELLTONE_DURATION_FG" "$SHELLTONE_RIGHT_DIVIDER"
   [ "$preview_time" = true ] && printf '\033[38;5;%sm%s11:17 AM' "$SHELLTONE_TIME_FG" "$SHELLTONE_RIGHT_DIVIDER"
   printf '\033[0m\n'
@@ -144,6 +180,36 @@ if [ "$preset" = interactive ]; then
     trap 'restore_screen' EXIT HUP INT TERM
   fi
   screen
+  paint 81 '  DESIGN PATH'
+  printf '  Start with a complete prompt personality, or compose one yourself.\n'
+  rule
+  printf '\n  '
+  paint 255 '1  SIGNAL'
+  paint 245 '  layered, Powerlevel-inspired presence'
+  preview tenfold blocks
+  printf '\n  '
+  paint 255 '2  STILL'
+  paint 245 '   faithful Pure-inspired restraint'
+  preview still pure true false false false
+  printf '\n  '
+  paint 255 '3  CONTOUR'
+  paint 245 ' compact Purity-inspired signal'
+  preview contour zen true false false false
+  printf '\n  '
+  paint 255 '4  CUSTOM'
+  paint 245 '  choose a palette and silhouette separately'
+  rule
+  ask 'Type 1–4, then press Enter.  Default: no change'
+  case $answer in
+    1) design=signal; theme=tenfold; style=blocks ;;
+    2) design=still; theme=still; style=pure; two_lines=true; show_time=false; show_status=false; show_duration=false; add_newline=false ;;
+    3) design=contour; theme=contour; style=zen; two_lines=true; show_time=false; show_status=false; show_duration=false; add_newline=false ;;
+    4) design=custom ;;
+    *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
+  esac
+
+  if [ "$design" = custom ]; then
+    screen
   paint 81 '  PALETTE'
   printf '  Choose a color story from a full prompt preview.\n'
   rule
@@ -175,6 +241,39 @@ if [ "$preset" = interactive ]; then
     1) style=frame ;; 2) style=pure ;; 3) style=zen ;; 4) style=blocks ;;
     *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
   esac
+  fi
+
+  . "$root/layouts/$style.sh"
+  if [ "$SHELLTONE_LAYOUT_BAR_CONTROLS" = true ]; then
+    screen
+    paint 81 '  BAR TREATMENT'
+    printf '  Shape the shaded silhouette without changing its palette.\n'
+    rule
+    paint 255 '  1  SOLID'
+    preview "$theme" "$style" "$two_lines" false false false solid "${SHELLTONE_BAR_SHADE:-dark}"
+    paint 255 '  2  STEPPED'
+    paint 245 '  layered fields with diagonal joins'
+    preview "$theme" "$style" "$two_lines" false false false stepped "${SHELLTONE_BAR_SHADE:-dark}"
+    rule
+    ask 'Type 1–2, then press Enter.  Default: 1 (solid)'
+    [ "${answer:-1}" = 2 ] && SHELLTONE_BAR_TREATMENT=stepped || SHELLTONE_BAR_TREATMENT=solid
+    screen
+    paint 81 '  BAR JOIN'
+    printf '  Should the bar’s segments be visibly separated?\n'
+    preview "$theme" "$style" "$two_lines" false false false
+    ask 'Press Enter for separated, or type n for seamless'
+    case ${answer:-y} in n|N) SHELLTONE_BAR_SEPARATED=false ;; *) SHELLTONE_BAR_SEPARATED=true ;; esac
+    screen
+    paint 81 '  BAR SHADE'
+    printf '  Choose the depth of the selected palette’s neutral field.\n'
+    rule
+    paint 255 '  1  SOFT    2  DARK    3  DEEP'
+    rule
+    ask 'Type 1–3, then press Enter.  Default: 2 (dark)'
+    case ${answer:-2} in 1) SHELLTONE_BAR_SHADE=soft ;; 2) SHELLTONE_BAR_SHADE=dark ;; 3) SHELLTONE_BAR_SHADE=deep ;; *) printf '%s\n' 'No configuration was written.'; exit 1 ;; esac
+  fi
+
+  if [ "$SHELLTONE_LAYOUT_DETAIL_CONTROLS" = true ]; then
   screen
   paint 81 '  HEIGHT'
   printf '  Choose how much vertical space the prompt uses.\n'
@@ -203,6 +302,7 @@ if [ "$preset" = interactive ]; then
   preview "$theme" "$style" "$two_lines" "$show_time" "$show_status" false
   ask 'Press Enter for yes, or type n for no'
   case ${answer:-y} in n|N) show_duration=false ;; esac
+  fi
   restore_screen
   trap - EXIT HUP INT TERM
   printf '\n'
@@ -218,6 +318,10 @@ SHELLTONE_THEME=$theme
 . "\$SHELLTONE_ROOT/themes/\$SHELLTONE_THEME.sh"
 SHELLTONE_PROMPT_STYLE=$style
 . "\$SHELLTONE_ROOT/layouts/\$SHELLTONE_PROMPT_STYLE.sh"
+SHELLTONE_DESIGN_PATH=$design
+SHELLTONE_BAR_TREATMENT=${SHELLTONE_BAR_TREATMENT:-solid}
+SHELLTONE_BAR_SEPARATED=${SHELLTONE_BAR_SEPARATED:-true}
+SHELLTONE_BAR_SHADE=${SHELLTONE_BAR_SHADE:-dark}
 SHELLTONE_TWO_LINES=$two_lines
 SHELLTONE_ADD_NEWLINE=$add_newline
 SHELLTONE_SHOW_TIME=$show_time
