@@ -36,6 +36,8 @@ export SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh
 : "${SHELLTONE_STATUS_ERROR_FG:=160}"
 : "${SHELLTONE_TWO_LINES:=true}"
 : "${SHELLTONE_SHOW_TIME:=true}"
+: "${SHELLTONE_SHOW_STATUS:=true}"
+: "${SHELLTONE_SHOW_DURATION:=true}"
 
 _shelltone_bash_fg() { printf '\\[\\e[38;5;%sm\\]' "$1"; }
 _shelltone_bash_bg() { printf '\\[\\e[48;5;%sm\\]' "$1"; }
@@ -85,7 +87,9 @@ _shelltone_bash_precmd() {
   local bar='' fade=''
   [[ $SHELLTONE_SHOW_BAR == true ]] && bar=$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")
   [[ -n $SHELLTONE_LEFT_FADE || -n $SHELLTONE_RIGHT_FADE ]] && fade="$(_shelltone_bash_fg "$SHELLTONE_FADE_FG")${SHELLTONE_LEFT_FADE}  ${SHELLTONE_RIGHT_FADE}"
-  SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")${SHELLTONE_TOP_PREFIX}${bar}$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") ${dir_bold}$dir${dir_bold_reset}$git ${_shelltone_bash_reset}${fade}${bar}$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")$clock${_shelltone_bash_reset}"
+  local status_segment=''
+  [[ $SHELLTONE_SHOW_STATUS == true ]] && status_segment="$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")"
+  SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")${SHELLTONE_TOP_PREFIX}${bar}$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") ${dir_bold}$dir${dir_bold_reset}$git ${_shelltone_bash_reset}${fade}${bar}${status_segment}$clock${_shelltone_bash_reset}"
 }
 
 shelltone() {

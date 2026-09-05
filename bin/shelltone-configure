@@ -33,9 +33,24 @@ title() {
   printf '\n\n'
 }
 
+fullscreen=false
+restore_screen() {
+  [ "$fullscreen" = true ] && tput rmcup 2>/dev/null || true
+  tput cnorm 2>/dev/null || true
+}
+
+screen() {
+  [ "$fullscreen" = true ] && tput clear 2>/dev/null || true
+  title
+}
+
 preview() {
   preview_theme=$1
   preview_style=$2
+  preview_lines=${3:-$two_lines}
+  preview_time=${4:-$show_time}
+  preview_status=${5:-$show_status}
+  preview_duration=${6:-$show_duration}
   . "$root/themes/$preview_theme.sh"
   . "$root/layouts/$preview_style.sh"
   printf '\n'
@@ -56,10 +71,11 @@ preview() {
     "$SHELLTONE_GIT_AHEAD_FG" "$SHELLTONE_GIT_STAGED_FG" "$SHELLTONE_GIT_CHANGED_FG" "$SHELLTONE_GIT_UNTRACKED_FG"
   printf '\033[38;5;%sm%s    %s\033[0m' "$SHELLTONE_FADE_FG" "$SHELLTONE_LEFT_FADE" "$SHELLTONE_RIGHT_FADE"
   [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_BAR_BG"
-  printf '\033[38;5;%sm ✔' "$SHELLTONE_STATUS_OK_FG"
-  [ "$show_time" = true ] && printf '\033[38;5;%sm%s11:17 AM' "$SHELLTONE_TIME_FG" "$SHELLTONE_RIGHT_DIVIDER"
+  [ "$preview_status" = true ] && printf '\033[38;5;%sm ✔' "$SHELLTONE_STATUS_OK_FG"
+  [ "$preview_duration" = true ] && printf '\033[38;5;%sm%s4s' "$SHELLTONE_DURATION_FG" "$SHELLTONE_RIGHT_DIVIDER"
+  [ "$preview_time" = true ] && printf '\033[38;5;%sm%s11:17 AM' "$SHELLTONE_TIME_FG" "$SHELLTONE_RIGHT_DIVIDER"
   printf '\033[0m\n'
-  [ "$two_lines" = true ] && printf '  \033[38;5;%sm%s\033[0m \033[38;5;76m%s\033[0m \n' "$SHELLTONE_FRAME_COLOR" "$SHELLTONE_INPUT_PREFIX" "$SHELLTONE_PROMPT_SYMBOL"
+  [ "$preview_lines" = true ] && printf '  \033[38;5;%sm%s\033[0m \033[38;5;76m%s\033[0m \n' "$SHELLTONE_FRAME_COLOR" "$SHELLTONE_INPUT_PREFIX" "$SHELLTONE_PROMPT_SYMBOL"
   rule
 }
 
@@ -99,6 +115,8 @@ done
 [ -r "$root/layouts/$style.sh" ] || { printf '%s\n' "shelltone configure: unknown style: $style" >&2; exit 2; }
 two_lines=true
 show_time=true
+show_status=true
+show_duration=true
 add_newline=true
 
 if [ "$preset" = compact ]; then
@@ -109,7 +127,12 @@ elif [ "$preset" != classic ] && [ "$preset" != interactive ]; then
 fi
 
 if [ "$preset" = interactive ]; then
-  title
+  if [ -t 0 ] && [ -t 1 ] && tput smcup 2>/dev/null; then
+    fullscreen=true
+    tput civis 2>/dev/null || true
+    trap 'restore_screen' EXIT HUP INT TERM
+  fi
+  screen
   paint 81 '  PALETTE'
   printf '  Choose a color story from a full prompt preview.\n'
   rule
@@ -127,6 +150,7 @@ if [ "$preset" = interactive ]; then
     4) theme=northstar ;; 5) theme=harbor ;; 6) theme=sunset-strip ;;
     *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
   esac
+  screen
   printf '\n'
   paint 81 '  SHAPE'
   printf '  See each silhouette in the palette you selected.\n'
@@ -142,16 +166,45 @@ if [ "$preset" = interactive ]; then
     1) style=frame ;; 2) style=pure ;; 3) style=zen ;; 4) style=blocks ;;
     *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
   esac
-  preview "$theme" "$style"
+  screen
   paint 81 '  HEIGHT'
-  printf '  1) compact  2) two lines [2]: '
+  printf '  Choose how much vertical space the prompt uses.\n'
+  rule
+  paint 255 '  1  COMPACT'
+  preview "$theme" "$style" false "$show_time" "$show_status" "$show_duration"
+  paint 255 '  2  TWO LINES'
+  preview "$theme" "$style" true "$show_time" "$show_status" "$show_duration"
+  printf '%s' '  Height [1-2, default 2]: '
   IFS= read -r answer
-  [ "${answer:-2}" = 1 ] && { two_lines=false; show_time=false; add_newline=false; }
-  preview "$theme" "$style"
+  [ "${answer:-2}" = 1 ] && { two_lines=false; add_newline=false; }
+  screen
   paint 81 '  CLOCK'
-  printf '  Show a clock? [Y/n]: '
+  printf '  Keep the current time on the right edge?\n'
+  preview "$theme" "$style" "$two_lines" false "$show_status" "$show_duration"
+  preview "$theme" "$style" "$two_lines" true "$show_status" "$show_duration"
+  printf '%s' '  Show a clock? [Y/n]: '
   IFS= read -r answer
   case ${answer:-y} in n|N) show_time=false ;; esac
+  screen
+  paint 81 '  STATUS'
+  printf '  Show the success check or failure mark?\n'
+  preview "$theme" "$style" "$two_lines" "$show_time" false "$show_duration"
+  preview "$theme" "$style" "$two_lines" "$show_time" true "$show_duration"
+  printf '%s' '  Show command status? [Y/n]: '
+  IFS= read -r answer
+  case ${answer:-y} in n|N) show_status=false ;; esac
+  screen
+  paint 81 '  DURATION'
+  printf '  Show elapsed time for slower commands?\n'
+  preview "$theme" "$style" "$two_lines" "$show_time" "$show_status" false
+  preview "$theme" "$style" "$two_lines" "$show_time" "$show_status" true
+  printf '%s' '  Show command duration? [Y/n]: '
+  IFS= read -r answer
+  case ${answer:-y} in n|N) show_duration=false ;; esac
+  restore_screen
+  trap - EXIT HUP INT TERM
+  printf '\n'
+  paint 81 '  Shelltone selection'
   preview "$theme" "$style"
 fi
 
@@ -166,6 +219,8 @@ SHELLTONE_PROMPT_STYLE=$style
 SHELLTONE_TWO_LINES=$two_lines
 SHELLTONE_ADD_NEWLINE=$add_newline
 SHELLTONE_SHOW_TIME=$show_time
+SHELLTONE_SHOW_STATUS=$show_status
+SHELLTONE_SHOW_DURATION=$show_duration
 SHELLTONE_TIME_FORMAT='%I:%M:%S %p'
 SHELLTONE_SHOW_CONTEXT=auto
 SHELLTONE_SHOW_VENV=true
