@@ -7,6 +7,7 @@ theme=tenfold
 style=frame
 preset=interactive
 design=custom
+fade_override=
 
 usage() {
   printf '%s\n' 'usage: shelltone configure [--theme NAME] [--style frame|pure|zen|blocks] [--preset classic|compact] [--output FILE]'
@@ -57,7 +58,7 @@ ask() {
   IFS= read -r answer || answer=''
 }
 
-preview() {
+preview() (
   preview_theme=$1
   preview_style=$2
   preview_lines=${3:-$two_lines}
@@ -79,6 +80,10 @@ preview() {
     SHELLTONE_LEFT_DIVIDER=''
     SHELLTONE_RIGHT_DIVIDER=''
   fi
+  if [ "$preview_treatment" = solid ]; then
+    SHELLTONE_LEFT_FADE=''
+    SHELLTONE_RIGHT_FADE=''
+  fi
   if [ "$SHELLTONE_SHOW_BAR" = true ] && [ "$preview_shade" != palette ]; then
     case $preview_shade in
       soft) preview_bar=238; preview_soft=239; preview_mid=238; preview_deep=237 ;;
@@ -91,13 +96,6 @@ preview() {
     SHELLTONE_GIT_CLEAN_BG=$preview_bar
     SHELLTONE_INFO_BG=$preview_bar
     SHELLTONE_STATUS_BG=$preview_bar
-    if [ "$preview_treatment" = stepped ]; then
-      SHELLTONE_OS_BG=$preview_deep
-      SHELLTONE_DIR_BG=$preview_mid
-      SHELLTONE_GIT_CLEAN_BG=$preview_soft
-      SHELLTONE_INFO_BG=$preview_mid
-      SHELLTONE_STATUS_BG=$preview_deep
-    fi
   fi
   printf '\n'
   paint 110 '  LIVE PREVIEW'
@@ -115,7 +113,10 @@ preview() {
   [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_GIT_CLEAN_BG"
   preview_git_icon='⎇ '
   [ "${SHELLTONE_SHOW_GIT_ICON:-true}" = false ] && preview_git_icon=''
-  if [ "${SHELLTONE_GIT_DETAIL:-true}" = false ]; then
+  if [ "${SHELLTONE_GIT_LABEL_STYLE:-standard}" = purity ]; then
+    printf '\033[38;5;%sm%sgit\033[38;5;%sm:\033[38;5;%smmain \033[38;5;%sm⇡1 \033[0m' \
+      "$SHELLTONE_GIT_PREFIX_FG" "$SHELLTONE_LEFT_DIVIDER" "$SHELLTONE_GIT_COLON_FG" "$SHELLTONE_GIT_BRANCH_FG" "$SHELLTONE_GIT_AHEAD_FG"
+  elif [ "${SHELLTONE_GIT_DETAIL:-true}" = false ]; then
     printf '\033[38;5;%sm%s%smain\033[38;5;%sm* \033[38;5;%sm⇡1 \033[0m' \
       "$SHELLTONE_GIT_CLEAN_FG" "$SHELLTONE_LEFT_DIVIDER" "$preview_git_icon" "$SHELLTONE_GIT_DIRTY_FG" "$SHELLTONE_GIT_AHEAD_FG"
   else
@@ -123,16 +124,27 @@ preview() {
       "$SHELLTONE_GIT_CLEAN_FG" "$SHELLTONE_LEFT_DIVIDER" \
       "$SHELLTONE_GIT_AHEAD_FG" "$SHELLTONE_GIT_STAGED_FG" "$SHELLTONE_GIT_CHANGED_FG" "$SHELLTONE_GIT_UNTRACKED_FG"
   fi
-  printf '\033[38;5;%sm%s    %s\033[0m' "$SHELLTONE_FADE_FG" "$SHELLTONE_LEFT_FADE" "$SHELLTONE_RIGHT_FADE"
+  if [ "$SHELLTONE_SHOW_BAR" = true ] && [ "$preview_treatment" = solid ]; then
+    printf '\033[38;5;%sm%s\033[48;5;%sm%28s\033[38;5;%sm%s\033[0m' \
+      "$SHELLTONE_FADE_FG" "$SHELLTONE_LEFT_FADE" "$SHELLTONE_BAR_BG" '' "$SHELLTONE_FADE_FG" "$SHELLTONE_RIGHT_FADE"
+  else
+    printf '\033[38;5;%sm%s    %s\033[0m' "$SHELLTONE_FADE_FG" "$SHELLTONE_LEFT_FADE" "$SHELLTONE_RIGHT_FADE"
+  fi
   [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_STATUS_BG"
   [ "$preview_status" = true ] && printf '\033[38;5;%sm ✔' "$SHELLTONE_STATUS_OK_FG"
   [ "$SHELLTONE_SHOW_BAR" = true ] && printf '\033[48;5;%sm' "$SHELLTONE_INFO_BG"
   [ "$preview_duration" = true ] && printf '\033[38;5;%sm%s4s' "$SHELLTONE_DURATION_FG" "$SHELLTONE_RIGHT_DIVIDER"
   [ "$preview_time" = true ] && printf '\033[38;5;%sm%s11:17 AM' "$SHELLTONE_TIME_FG" "$SHELLTONE_RIGHT_DIVIDER"
   printf '\033[0m\n'
-  [ "$preview_lines" = true ] && printf '  \033[38;5;%sm%s\033[0m \033[38;5;%sm%s\033[0m \n' "$SHELLTONE_FRAME_COLOR" "$SHELLTONE_INPUT_PREFIX" "${SHELLTONE_PROMPT_SUCCESS_FG:-76}" "$SHELLTONE_PROMPT_SYMBOL"
+  if [ "$preview_lines" = true ]; then
+    printf '  \033[38;5;%sm%s\033[0m \033[38;5;%sm%s\033[0m' "$SHELLTONE_FRAME_COLOR" "$SHELLTONE_INPUT_PREFIX" "${SHELLTONE_PROMPT_SUCCESS_FG:-76}" "$SHELLTONE_PROMPT_SYMBOL"
+    if [ "${SHELLTONE_SYNTAX_HIGHLIGHT:-false}" = true ]; then
+      printf ' \033[38;5;%smcd\033[0m \033[38;5;%sm~/projects\033[0m' "$SHELLTONE_COMMAND_FG" "$SHELLTONE_INFO_FG"
+    fi
+    printf ' \n'
+  fi
   rule
-}
+)
 
 palette_option() {
   number=$1
@@ -259,31 +271,16 @@ if [ "$preset" = interactive ]; then
     paint 81 '  BAR TREATMENT'
     printf '  Shape the shaded silhouette without changing its palette.\n'
     rule
-    paint 255 '  1  SOLID'
-    preview "$theme" "$style" "$two_lines" false false false solid "${SHELLTONE_BAR_SHADE:-dark}"
-    paint 255 '  2  STEPPED'
-    paint 245 '  layered fields with diagonal joins'
-    preview "$theme" "$style" "$two_lines" false false false stepped "${SHELLTONE_BAR_SHADE:-dark}"
+    paint 255 '  1  SEPARATED GRADIENT'
+    preview "$theme" "$style" "$two_lines" false false false gradient palette true
+    paint 255 '  2  CONNECTED SOLID'
+    preview "$theme" "$style" "$two_lines" false false false solid palette false
     rule
     ask 'Select 1–2.  Select 0 to exit.'
     case $answer in
-      1) SHELLTONE_BAR_TREATMENT=solid ;;
-      2) SHELLTONE_BAR_TREATMENT=stepped ;;
-      0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
-      *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
-    esac
-    screen
-    paint 81 '  BAR JOIN'
-    printf '  Choose a visible join or a seamless field.\n'
-    rule
-    paint 255 '  1  SEPARATED'
-    preview "$theme" "$style" "$two_lines" false false false "$SHELLTONE_BAR_TREATMENT" palette true
-    paint 255 '  2  SEAMLESS'
-    preview "$theme" "$style" "$two_lines" false false false "$SHELLTONE_BAR_TREATMENT" palette false
-    ask 'Select 1–2.  Select 0 to exit.'
-    case $answer in
-      1) SHELLTONE_BAR_SEPARATED=true ;;
-      2) SHELLTONE_BAR_SEPARATED=false ;;
+      1) SHELLTONE_BAR_TREATMENT=gradient; SHELLTONE_BAR_SEPARATED=true; fade_override= ;;
+      2) SHELLTONE_BAR_TREATMENT=solid; SHELLTONE_BAR_SEPARATED=false; fade_override="SHELLTONE_LEFT_FADE=''
+SHELLTONE_RIGHT_FADE=''" ;;
       0) printf '%s\n' 'No configuration was written.'; exit 0 ;;
       *) printf '%s\n' 'No configuration was written.'; exit 1 ;;
     esac
@@ -383,6 +380,7 @@ SHELLTONE_DESIGN_PATH=$design
 SHELLTONE_BAR_TREATMENT=${SHELLTONE_BAR_TREATMENT:-solid}
 SHELLTONE_BAR_SEPARATED=${SHELLTONE_BAR_SEPARATED:-true}
 SHELLTONE_BAR_SHADE=${SHELLTONE_BAR_SHADE:-dark}
+$fade_override
 SHELLTONE_TWO_LINES=$two_lines
 SHELLTONE_ADD_NEWLINE=$add_newline
 SHELLTONE_SHOW_TIME=$show_time

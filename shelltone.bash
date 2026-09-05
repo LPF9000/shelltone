@@ -35,6 +35,10 @@ export SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh
 : "${SHELLTONE_GIT_UNTRACKED_FG:=203}"
 : "${SHELLTONE_GIT_DIRTY_FG:=220}"
 : "${SHELLTONE_GIT_DETAIL:=true}"
+: "${SHELLTONE_GIT_LABEL_STYLE:=standard}"
+: "${SHELLTONE_GIT_PREFIX_FG:=$SHELLTONE_GIT_CLEAN_FG}"
+: "${SHELLTONE_GIT_COLON_FG:=$SHELLTONE_SEPARATOR_FG}"
+: "${SHELLTONE_GIT_BRANCH_FG:=$SHELLTONE_GIT_CLEAN_FG}"
 : "${SHELLTONE_INFO_FG:=39}"
 : "${SHELLTONE_TIME_FG:=66}"
 : "${SHELLTONE_STATUS_OK_FG:=70}"
@@ -90,9 +94,13 @@ _shelltone_bash_git() {
     [[ $index != ' ' ]] && ((++staged))
     [[ $worktree != ' ' ]] && ((++changed))
   done <<< "$porcelain"
-  local git_prefix='⎇  '
-  [[ ${SHELLTONE_SHOW_GIT_ICON:-true} == true ]] || git_prefix=''
-  SHELLTONE_BASH_GIT="$(_shelltone_bash_fg "$SHELLTONE_GIT_CLEAN_FG") ${git_prefix}$branch"
+  if [[ ${SHELLTONE_GIT_LABEL_STYLE,,} == purity ]]; then
+    SHELLTONE_BASH_GIT="$(_shelltone_bash_fg "$SHELLTONE_GIT_PREFIX_FG") git$(_shelltone_bash_fg "$SHELLTONE_GIT_COLON_FG"):$(_shelltone_bash_fg "$SHELLTONE_GIT_BRANCH_FG")$branch"
+  else
+    local git_prefix='⎇  '
+    [[ ${SHELLTONE_SHOW_GIT_ICON:-true} == true ]] || git_prefix=''
+    SHELLTONE_BASH_GIT="$(_shelltone_bash_fg "$SHELLTONE_GIT_CLEAN_FG") ${git_prefix}$branch"
+  fi
   (( behind > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_BEHIND_FG") ⇣$behind"
   (( ahead > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_AHEAD_FG") ⇡$ahead"
   (( push_behind > 0 )) && SHELLTONE_BASH_GIT+="$(_shelltone_bash_fg "$SHELLTONE_GIT_PUSH_BEHIND_FG") ⇠$push_behind"
