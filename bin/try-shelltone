@@ -13,13 +13,21 @@ case $shell in
   zsh)
     zdot=$(mktemp -d "${TMPDIR:-/tmp}/shelltone-zdot.XXXXXX")
     trap 'rm -rf -- "$zdot"' EXIT HUP INT TERM
+    source_config=${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}
+    sandbox_config=$zdot/shelltone.zsh
+    cp "$source_config" "$sandbox_config"
     ln -s "$root/shelltone-sandbox.zsh" "$zdot/.zshrc"
     SHELLTONE_THEME="$root/shelltone.zsh" SHELLTONE_ROOT="$root" \
-      SHELLTONE_CONFIG="${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}" \
+      SHELLTONE_CONFIG="$sandbox_config" \
       SHELLTONE_SANDBOX_HISTORY="$zdot/history" ZDOTDIR="$zdot" zsh -d -i
     ;;
   bash)
-    SHELLTONE_ROOT="$root" SHELLTONE_CONFIG="${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}" \
+    bdot=$(mktemp -d "${TMPDIR:-/tmp}/shelltone-bdot.XXXXXX")
+    trap 'rm -rf -- "$bdot"' EXIT HUP INT TERM
+    source_config=${SHELLTONE_CONFIG:-$root/config/shelltone.zsh}
+    sandbox_config=$bdot/shelltone.zsh
+    cp "$source_config" "$sandbox_config"
+    SHELLTONE_ROOT="$root" SHELLTONE_CONFIG="$sandbox_config" \
       bash --noprofile --rcfile "$root/shelltone-bash-sandbox.sh" -i
     ;;
   *)
