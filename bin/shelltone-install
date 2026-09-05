@@ -1,0 +1,67 @@
+#!/usr/bin/env sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+shell=''
+yes=false
+dry_run=false
+
+usage() {
+  printf '%s\n' 'usage: shelltone install {bash|zsh} [--yes] [--dry-run]'
+}
+
+shift_shell() {
+  case $shell in
+    zsh) rc=${ZDOTDIR:-$HOME}/.zshrc ;;
+    bash) rc=${BASH_ENV:-$HOME/.bashrc} ;;
+    *) usage >&2; exit 2 ;;
+  esac
+}
+
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    bash|zsh) [ -z "$shell" ] && shell=$1 || { usage >&2; exit 2; } ;;
+    --yes) yes=true ;;
+    --dry-run) dry_run=true ;;
+    --help|-h) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+shift_shell
+command="source '$root/shelltone.$shell'"
+marker='# shelltone prompt'
+
+if [ -f "$rc" ] && grep -Fq "$marker" "$rc"; then
+  printf '%s\n' "Shelltone is already enabled in $rc"
+  exit 0
+fi
+
+printf '\033[38;5;81m  S H E L L T O N E\033[0m\n'
+printf '\033[38;5;141m  color for the shell you already know\033[0m\n\n'
+printf '%s\n' "Shelltone will add one source line to $rc."
+printf '%s\n' "A timestamped backup of that file will be made first when it exists."
+
+if [ "$dry_run" = true ]; then
+  printf '%s\n' "Dry run: would append Shelltone to $rc"
+  exit 0
+fi
+
+if [ "$yes" != true ]; then
+  printf '%s' 'Continue? [y/N] '
+  IFS= read -r answer
+  case $answer in y|Y|yes|YES) ;; *) printf '%s\n' 'No files were changed.'; exit 0 ;; esac
+fi
+
+mkdir -p "$(dirname "$rc")"
+if [ -f "$rc" ]; then
+  backup="$rc.shelltone-backup.$(date +%Y%m%d%H%M%S)"
+  cp -p "$rc" "$backup"
+  printf '%s\n' "Backed up $rc to $backup"
+fi
+{
+  printf '\n%s\n' "$marker"
+  printf '%s\n' "$command"
+} >> "$rc"
+printf '%s\n' "Shelltone is ready. Open a new $shell session to use it."

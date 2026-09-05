@@ -19,11 +19,18 @@ case ${1:-help} in
     shift
     exec "$root/bin/try-shelltone" "$@"
     ;;
+  install)
+    shift
+    exec sh "$root/bin/shelltone-install" "$@"
+    ;;
   themes)
     for theme in "$root"/themes/*.sh; do basename "${theme%.sh}"; done
     ;;
+  styles)
+    for layout in "$root"/layouts/*.sh; do basename "${layout%.sh}"; done
+    ;;
   help|--help|-h)
-    printf '%s\n' 'usage: shelltone {init|configure|preview|themes}'
+    printf '%s\n' 'usage: shelltone {init|configure|preview|themes|styles|install}'
     ;;
   *)
     printf '%s\n' "shelltone: unknown command: $1" >&2
