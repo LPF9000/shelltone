@@ -68,6 +68,11 @@ typeset -g SHELLTONE_VERSION=0.1.0
 : ${SHELLTONE_GIT_CHANGED_FG:=215}
 : ${SHELLTONE_GIT_UNTRACKED_FG:=203}
 : ${SHELLTONE_GIT_ICON:=⎇}
+: ${SHELLTONE_GIT_DETAIL:=true}
+: ${SHELLTONE_GIT_LABEL_STYLE:=standard}
+: ${SHELLTONE_GIT_PREFIX_FG:=$SHELLTONE_GIT_CLEAN_FG}
+: ${SHELLTONE_GIT_COLON_FG:=$SHELLTONE_SEPARATOR_FG}
+: ${SHELLTONE_GIT_BRANCH_FG:=$SHELLTONE_GIT_CLEAN_FG}
 : ${SHELLTONE_SHOW_DIR_ICONS:=false}
 : ${SHELLTONE_SHOW_GIT_ICON:=true}
 : ${SHELLTONE_INFO_BG:=$SHELLTONE_BAR_BG}
@@ -77,6 +82,10 @@ typeset -g SHELLTONE_VERSION=0.1.0
 : ${SHELLTONE_STATUS_BG:=$SHELLTONE_BAR_BG}
 : ${SHELLTONE_STATUS_OK_FG:=70}
 : ${SHELLTONE_STATUS_ERROR_FG:=160}
+: ${SHELLTONE_PROMPT_SUCCESS_FG:=76}
+: ${SHELLTONE_PROMPT_ERROR_FG:=196}
+: ${SHELLTONE_SYNTAX_HIGHLIGHT:=false}
+: ${SHELLTONE_COMMAND_FG:=76}
 
 autoload -Uz add-zsh-hook
 zmodload zsh/datetime 2>/dev/null || true
@@ -100,6 +109,23 @@ function _shelltone_bool() {
   [[ ${1:l} == (1|true|yes|on) ]]
 }
 
+# Pure-style command highlighting for the dependency-free Still path. This is
+# intentionally limited to command positions, leaving arguments at the
+# terminal's normal foreground color.
+function _shelltone_syntax_highlight() {
+  local remaining=${BUFFER-} match_start match_end offset=0
+  local pattern='(^|[;|&][[:space:]]*)(cd|echo|touch|exit|git|ls|cat|mkdir|rm|cp|mv|pwd|clear|source|ssh|curl|make|npm|node|python|python3|docker|kubectl)([[:space:]]|$)'
+  region_highlight=()
+  _shelltone_bool "$SHELLTONE_SYNTAX_HIGHLIGHT" || return 0
+  while [[ $remaining =~ $pattern ]]; do
+    match_start=$(( offset + MBEGIN[2] - 1 ))
+    match_end=$(( offset + MEND[2] ))
+    region_highlight+=("${match_start} ${match_end} fg=${SHELLTONE_COMMAND_FG},bold")
+    offset=$(( offset + MEND[0] ))
+    remaining=${remaining[$(( MEND[0] + 1 )),-1]}
+  done
+}
+
 function _shelltone_apply_bar_treatment() {
   _shelltone_bool "$SHELLTONE_SHOW_BAR" || return 0
   local base=$SHELLTONE_BAR_BG soft=$SHELLTONE_BAR_BG mid=$SHELLTONE_BAR_BG deep=$SHELLTONE_BAR_BG
@@ -115,14 +141,6 @@ function _shelltone_apply_bar_treatment() {
   SHELLTONE_GIT_DIRTY_BG=$base
   SHELLTONE_INFO_BG=$base
   SHELLTONE_STATUS_BG=$base
-  if [[ ${SHELLTONE_BAR_TREATMENT:l} == stepped ]]; then
-    SHELLTONE_OS_BG=$deep
-    SHELLTONE_DIR_BG=$mid
-    SHELLTONE_GIT_CLEAN_BG=$soft
-    SHELLTONE_GIT_DIRTY_BG=$soft
-    SHELLTONE_INFO_BG=$mid
-    SHELLTONE_STATUS_BG=$deep
-  fi
 }
 
 function _shelltone_add_left() {
@@ -212,26 +230,38 @@ function _shelltone_git() {
   done <<< "$porcelain"
 
   _shelltone_git_parts=()
-  _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CLEAN_FG "${prefix}${branch}" false)
+  if [[ ${SHELLTONE_GIT_LABEL_STYLE:l} == purity ]]; then
+    _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PREFIX_FG 'git' false)
+    _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_COLON_FG ':' false)
+    _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_BRANCH_FG "$branch" false)
+  else
+    _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CLEAN_FG "${prefix}${branch}" false)
+  fi
+  if ! _shelltone_bool "$SHELLTONE_GIT_DETAIL" && (( staged + changed + untracked > 0 )); then
+    _shelltone_git_parts+=($SHELLTONE_GIT_DIRTY_BG $SHELLTONE_GIT_DIRTY_FG '*' false)
+  fi
   (( behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_BEHIND_FG "⇣${behind}" false)
   (( ahead > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_AHEAD_FG "⇡${ahead}" false)
   (( push_behind > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PUSH_BEHIND_FG "⇠${push_behind}" false)
   (( push_ahead > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_PUSH_AHEAD_FG "⇢${push_ahead}" false)
-  (( staged > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_STAGED_FG "+${staged}" false)
-  (( changed > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CHANGED_FG "!${changed}" false)
-  (( untracked > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_UNTRACKED_FG "?${untracked}" false)
+  if _shelltone_bool "$SHELLTONE_GIT_DETAIL"; then
+    (( staged > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_STAGED_FG "+${staged}" false)
+    (( changed > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_CHANGED_FG "!${changed}" false)
+    (( untracked > 0 )) && _shelltone_git_parts+=($SHELLTONE_GIT_CLEAN_BG $SHELLTONE_GIT_UNTRACKED_FG "?${untracked}" false)
+  fi
   return 0
 }
 
 function _shelltone_render_left() {
-  local out='' bg fg label bold icon icon_fg rest i first=true
+  local out='' bg fg label bold icon icon_fg rest previous_label='' compact=false i first=true
   for (( i = 1; i <= ${#_shelltone_left_parts}; i += 4 )); do
     bg=${_shelltone_left_parts[i]}
     fg=${_shelltone_left_parts[i + 1]}
     label=${_shelltone_left_parts[i + 2]}
     bold=${_shelltone_left_parts[i + 3]}
     _shelltone_bool "$SHELLTONE_SHOW_BAR" && out+="${_shelltone_bg}${bg}m%}"
-    if [[ $first == false ]] && _shelltone_bool "$SHELLTONE_BAR_SEPARATED"; then
+    if [[ $first == false ]] && _shelltone_bool "$SHELLTONE_BAR_SEPARATED" &&
+        ! [[ ${SHELLTONE_GIT_LABEL_STYLE:l} == purity && ( $previous_label == git || $previous_label == : ) ]]; then
       out+="${_shelltone_fg}${SHELLTONE_SEPARATOR_FG}m%}${SHELLTONE_LEFT_DIVIDER}"
     fi
     icon=''
@@ -253,7 +283,9 @@ function _shelltone_render_left() {
         rest=${label#$icon}
         ;;
     esac
-    out+="${_shelltone_fg}${fg}m%} "
+    compact=false
+    [[ ${SHELLTONE_GIT_LABEL_STYLE:l} == purity && ( $previous_label == git || $previous_label == : ) ]] && compact=true
+    [[ $compact == false ]] && out+="${_shelltone_fg}${fg}m%} " || out+="${_shelltone_fg}${fg}m%}"
     _shelltone_bool "$bold" && out+="${_shelltone_bold}"
     if [[ -n $icon ]]; then
       out+="${_shelltone_fg}${icon_fg}m%}${icon}${_shelltone_fg}${fg}m%}${rest}"
@@ -261,7 +293,8 @@ function _shelltone_render_left() {
       out+="${label}"
     fi
     _shelltone_bool "$bold" && out+="${_shelltone_bold_reset}"
-    out+=' '
+    ! [[ ${SHELLTONE_GIT_LABEL_STYLE:l} == purity && ( $label == git || $label == : ) ]] && out+=' '
+    previous_label=$label
     first=false
   done
   [[ -n $out && -n $SHELLTONE_LEFT_FADE ]] &&
@@ -403,24 +436,24 @@ function _shelltone_set_prompt() {
   if _shelltone_bool "$SHELLTONE_TWO_LINES"; then
     PROMPT=''
     _shelltone_bool "$SHELLTONE_ADD_NEWLINE" && PROMPT+=$'\n'
-    if _shelltone_bool "$SHELLTONE_SHOW_BAR"; then
+    if _shelltone_bool "$SHELLTONE_SHOW_BAR" && [[ ${SHELLTONE_BAR_TREATMENT:l} == solid ]]; then
       PROMPT+="${prefix}${left}${_shelltone_bg}${SHELLTONE_BAR_BG}m%}${gap_text}${right}"
     else
       PROMPT+="${prefix}${left}${gap_text}${right}"
     fi
     PROMPT+=$'\n'
     if (( _shelltone_last_status == 0 )); then
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}76m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     else
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}196m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     fi
   else
     PROMPT=''
     _shelltone_bool "$SHELLTONE_ADD_NEWLINE" && PROMPT+=$'\n'
     PROMPT+="${left} "
     (( _shelltone_last_status == 0 )) &&
-      PROMPT+="${_shelltone_fg}76m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} " ||
-      PROMPT+="${_shelltone_fg}196m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} " ||
+      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_fg_reset} "
     RPROMPT=$right
   fi
 }
@@ -486,6 +519,9 @@ function shelltone() {
 
 if [[ -o interactive ]]; then
   setopt prompt_subst
+  autoload -Uz add-zle-hook-widget
+  add-zle-hook-widget -D line-pre-redraw _shelltone_syntax_highlight 2>/dev/null || true
+  add-zle-hook-widget line-pre-redraw _shelltone_syntax_highlight
   add-zsh-hook -D preexec _shelltone_preexec 2>/dev/null || true
   add-zsh-hook -D precmd _shelltone_precmd 2>/dev/null || true
   add-zsh-hook preexec _shelltone_preexec
