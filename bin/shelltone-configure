@@ -180,30 +180,27 @@ if [ "$preset" = interactive ]; then
   printf '  Choose how much vertical space the prompt uses.\n'
   rule
   paint 255 '  1  COMPACT'
-  preview "$theme" "$style" false "$show_time" "$show_status" "$show_duration"
+  preview "$theme" "$style" false false false false
   paint 255 '  2  TWO LINES'
-  preview "$theme" "$style" true "$show_time" "$show_status" "$show_duration"
+  preview "$theme" "$style" true false false false
   ask 'Type 1–2, then press Enter.  Default: 2 (two lines)'
   [ "${answer:-2}" = 1 ] && { two_lines=false; add_newline=false; }
   screen
   paint 81 '  CLOCK'
-  printf '  Keep the current time on the right edge?\n'
-  preview "$theme" "$style" "$two_lines" false "$show_status" "$show_duration"
-  preview "$theme" "$style" "$two_lines" true "$show_status" "$show_duration"
+  printf '  Your prompt so far. Add the current time on the right edge?\n'
+  preview "$theme" "$style" "$two_lines" false false false
   ask 'Press Enter for yes, or type n for no'
   case ${answer:-y} in n|N) show_time=false ;; esac
   screen
   paint 81 '  STATUS'
-  printf '  Show the success check or failure mark?\n'
-  preview "$theme" "$style" "$two_lines" "$show_time" false "$show_duration"
-  preview "$theme" "$style" "$two_lines" "$show_time" true "$show_duration"
+  printf '  Your prompt so far. Add the success check or failure mark?\n'
+  preview "$theme" "$style" "$two_lines" "$show_time" false false
   ask 'Press Enter for yes, or type n for no'
   case ${answer:-y} in n|N) show_status=false ;; esac
   screen
   paint 81 '  DURATION'
-  printf '  Show elapsed time for slower commands?\n'
+  printf '  Your prompt so far. Add elapsed time for slower commands?\n'
   preview "$theme" "$style" "$two_lines" "$show_time" "$show_status" false
-  preview "$theme" "$style" "$two_lines" "$show_time" "$show_status" true
   ask 'Press Enter for yes, or type n for no'
   case ${answer:-y} in n|N) show_duration=false ;; esac
   restore_screen
