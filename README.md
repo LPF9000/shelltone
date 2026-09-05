@@ -21,7 +21,7 @@ It keeps the good parts close: the directory and Git branch on the left; command
 ╰─ > git status
 ```
 
-Start with **Tenfold**, **Afterglow**, **Night Shift**, **Northstar**, **Harbor**, or **Sunset Strip**. Each has its own palette and can be set up as a full two-line prompt or a lean one-line prompt. All of them use ordinary Unicode characters, so a normal Unicode-capable terminal font is enough.
+Start with **Tenfold**, **Afterglow**, **Night Shift**, **Northstar**, **Harbor**, or **Sunset Strip**. Pair any palette with **frame**, **pure**, **zen**, or **blocks** to independently choose the visual structure: bar, frame, dividers, fades, and prompt glyph. All of them use ordinary Unicode characters, so a normal Unicode-capable terminal font is enough.
 
 ## Try it without touching your shell
 
@@ -34,11 +34,11 @@ Clone the repository, then run:
 
 That opens a child shell with isolated startup files. It does not read or alter your regular shell configuration. Type `exit` when you are done; the temporary startup directory and its history go away with it.
 
-The sandbox also includes a few portable conveniences: colored `ls`, `ll`, `la`, `foldersize`, `projects`, and `reload`. They apply only to that test shell.
+The sandbox changes no startup file, alias, history file, or setting outside its disposable child shell. It is only for trying Shelltone’s prompt palettes and styles.
 
 ## Make it yours
 
-Inside the sandbox, run the live configuration wizard:
+Inside the sandbox, run the live configuration wizard. It presents color-coded palette cards, structural-style choices, and a live ANSI preview before writing anything:
 
 ```sh
 shelltone configure
@@ -48,18 +48,20 @@ shelltone reload
 It previews prompt height, spacing, clock format, and success/failure status before writing a config file. For a quick starting point:
 
 ```sh
-./bin/shelltone configure --theme tenfold --preset classic
-./bin/shelltone configure --theme night-shift --preset compact
+./bin/shelltone configure --theme tenfold --style frame --preset classic
+./bin/shelltone configure --theme night-shift --style pure --preset compact
 ```
 
 By default this writes `config/shelltone.zsh`; pass `--output FILE` to keep a separate config. The settings are plain shell assignments and 256-color values, which makes new themes easy to add, copy, and tune without learning a mini language.
 
-To enable it permanently, add the matching command to the end of your shell startup file:
+To enable it permanently, use the backup-first installer. It only appends a marked source line after confirmation and copies the startup file before changing it:
 
 ```sh
-eval "$(./bin/shelltone init zsh)"   # ~/.zshrc
-eval "$(./bin/shelltone init bash)"  # ~/.bashrc
+./bin/shelltone install zsh
+./bin/shelltone install bash
 ```
+
+Use `--dry-run` to inspect the target without changing files. Shelltone never replaces a startup file or changes any other shell configuration.
 
 ## Git at a glance
 

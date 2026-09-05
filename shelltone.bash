@@ -7,6 +7,15 @@ export SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh
 [[ -r $SHELLTONE_CONFIG ]] && . "$SHELLTONE_CONFIG"
 
 : "${SHELLTONE_BAR_BG:=236}"
+: "${SHELLTONE_PROMPT_STYLE:=frame}"
+: "${SHELLTONE_SHOW_BAR:=true}"
+: "${SHELLTONE_LEFT_DIVIDER:=>}"
+: "${SHELLTONE_RIGHT_DIVIDER:=·}"
+: "${SHELLTONE_LEFT_FADE:=▓▒░}"
+: "${SHELLTONE_RIGHT_FADE:=░▒▓}"
+: "${SHELLTONE_TOP_PREFIX:=╭─}"
+: "${SHELLTONE_INPUT_PREFIX:=╰─}"
+: "${SHELLTONE_PROMPT_SYMBOL:=>}"
 : "${SHELLTONE_FRAME_COLOR:=240}"
 : "${SHELLTONE_SEPARATOR_FG:=244}"
 : "${SHELLTONE_FADE_FG:=236}"
@@ -73,7 +82,10 @@ _shelltone_bash_precmd() {
   [[ $SHELLTONE_SHOW_TIME == true ]] && clock=" $(_shelltone_bash_fg "$SHELLTONE_TIME_FG")$(date +"$SHELLTONE_TIME_FORMAT")"
   local dir_bold='' dir_bold_reset=''
   [[ $SHELLTONE_DIR_BOLD == true ]] && { dir_bold=${_shelltone_bash_bold}; dir_bold_reset=${_shelltone_bash_bold_reset}; }
-  SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")╭─$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") ${dir_bold}$dir${dir_bold_reset}$git ${_shelltone_bash_reset}$(_shelltone_bash_fg "$SHELLTONE_FADE_FG")▓▒░  ░▒▓$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")$clock${_shelltone_bash_reset}"
+  local bar='' fade=''
+  [[ $SHELLTONE_SHOW_BAR == true ]] && bar=$(_shelltone_bash_bg "$SHELLTONE_BAR_BG")
+  [[ -n $SHELLTONE_LEFT_FADE || -n $SHELLTONE_RIGHT_FADE ]] && fade="$(_shelltone_bash_fg "$SHELLTONE_FADE_FG")${SHELLTONE_LEFT_FADE}  ${SHELLTONE_RIGHT_FADE}"
+  SHELLTONE_BASH_TOP="$(_shelltone_bash_fg "$SHELLTONE_FRAME_COLOR")${SHELLTONE_TOP_PREFIX}${bar}$(_shelltone_bash_fg "$SHELLTONE_DIR_FG") ${dir_bold}$dir${dir_bold_reset}$git ${_shelltone_bash_reset}${fade}${bar}$(_shelltone_bash_fg "$status_fg") $([[ $status == 0 ]] && printf '✔' || printf '✘ %s' "$status")$clock${_shelltone_bash_reset}"
 }
 
 shelltone() {
@@ -81,11 +93,12 @@ shelltone() {
     reload) . "$SHELLTONE_CONFIG" ;;
     aliases) shift; . "$SHELLTONE_ROOT/shelltone-aliases.sh"; shelltone_aliases_enable "${1:-starter}" ;;
     configure) shift; SHELLTONE_CONFIG="$SHELLTONE_CONFIG" "$SHELLTONE_ROOT/bin/shelltone-configure" "$@" && shelltone reload ;;
-    themes) "$SHELLTONE_ROOT/bin/shelltone" themes ;;
-    *) printf '%s\n' 'usage: shelltone {configure|reload|aliases|themes}' ;;
+    themes|styles) "$SHELLTONE_ROOT/bin/shelltone" "$1" ;;
+    install) shift; "$SHELLTONE_ROOT/bin/shelltone" install "$@" ;;
+    *) printf '%s\n' 'usage: shelltone {configure|reload|aliases|themes|styles|install}' ;;
   esac
 }
 
 SHELLTONE_PREVIOUS_PROMPT_COMMAND=${PROMPT_COMMAND-}
 PROMPT_COMMAND=_shelltone_bash_precmd
-PS1='${SHELLTONE_BASH_TOP}\n\$ '
+PS1='${SHELLTONE_BASH_TOP}\n${SHELLTONE_INPUT_PREFIX} ${SHELLTONE_PROMPT_SYMBOL} '

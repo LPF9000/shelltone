@@ -21,8 +21,12 @@ Every theme should show Git state with a shared vocabulary: `⇣` and `⇡` for 
 ## Next refinements
 
 - Add an optional, clearly labeled abbreviated-directory mode for deep paths.
-- Add a small installation helper that appends the selected `init` command only after confirmation.
+- Add a Figlet-style, slanted Shelltone banner for the first-run experience and installer, with a compact plain-text fallback for narrow terminals.
 - Add theme screenshots generated from the sandbox for visual regression review.
+
+## Prompt styles
+
+Palette themes and prompt styles are deliberately separate. A palette controls color; a style controls the bar, frames, dividers, fades, clock treatment, and prompt glyph. The initial set is **frame**, **pure**, **zen**, and **blocks**. Future styles should stay font-independent and should be recognizable at a glance without copying another prompt's exact composition.
 
 ## Artwork follow-up
 
