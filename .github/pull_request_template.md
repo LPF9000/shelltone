@@ -10,4 +10,5 @@
 - [ ] `./tests/check.zsh`
 - [ ] `python3 tests/test-runtime.py -v`
 - [ ] `./tests/check-compat.sh`
+- [ ] `./tests/check-terminal.sh`
 - [ ] `./tests/check-visual.sh`

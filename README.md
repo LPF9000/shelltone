@@ -54,7 +54,7 @@ It previews the whole chosen design path before writing a config file. For a qui
 ./bin/shelltone configure --theme night-shift --style pure --preset compact
 ```
 
-By default this writes `config/shelltone.zsh`; pass `--output FILE` to keep a separate config. The settings are plain shell assignments and 256-color values, which makes new palettes and layouts easy to add, copy, and tune without learning a mini language. See [framework integration](./docs/integrations.md) for Oh My Zsh, Prezto, Antidote, Zinit, and plain-shell loading examples.
+By default this writes `config/shelltone.zsh`; pass `--output FILE` to keep a separate config. The settings are plain shell assignments and 256-color values, which makes new palettes and layouts easy to add, copy, and tune without learning a mini language. See the [configuration reference](./docs/configuration.md) and [framework integration](./docs/integrations.md) for settings, loading order, and troubleshooting.
 
 To enable it permanently, use the backup-first installer. It only appends a marked source line after confirmation and copies the startup file before changing it:
 
@@ -107,6 +107,7 @@ Shelltone starts setup with a theme picker, then walks through that theme's layo
 
 - `shelltone.zsh` and `shelltone.bash` — small prompt engines behind the `shelltone` command.
 - `shelltone.plugin.zsh` — plugin-manager entry point for existing Zsh frameworks.
+- `docs/configuration.md` and `docs/integrations.md` — settings and framework recipes.
 - `config/shelltone.zsh` — the editable default theme configuration, shared by both shells.
 - `themes/` — portable palette definitions.
 - `shelltone-sandbox.zsh` and `shelltone-bash-sandbox.sh` — isolated child-shell startup logic.
@@ -116,6 +117,7 @@ Shelltone starts setup with a theme picker, then walks through that theme's layo
 - `bin/shelltone-configure` — configuration wizard and presets.
 - `tests/check.zsh` and `tests/check.bash` — syntax and behavior smoke checks.
 - `tests/check-compat.sh` — repeated-loading and existing-hook checks.
+- `tests/check-terminal.sh` — narrow-column and terminal capability checks.
 - `tests/check-visual.sh` — deterministic curated-path SVG snapshots with optional PNG rendering.
 - `bin/shelltone-benchmark` — local redraw timing for both shells.
 
@@ -126,6 +128,7 @@ Run the checks with:
 ./tests/check.zsh
 python3 tests/test-runtime.py -v
 ./tests/check-compat.sh
+./tests/check-terminal.sh
 ./tests/check-visual.sh
 ./bin/shelltone-benchmark
 ```
