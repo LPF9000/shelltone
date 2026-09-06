@@ -40,3 +40,12 @@ jobs:
       - name: Check prompt lifecycles
         if: matrix.shell == 'zsh'
         run: python3 tests/test-runtime.py -v
+      - name: Check framework compatibility
+        if: matrix.shell == 'zsh'
+        run: ./tests/check-compat.sh
+      - name: Check visual snapshots
+        if: matrix.shell == 'zsh'
+        run: ./tests/check-visual.sh
+      - name: Measure redraw baseline
+        if: matrix.shell == 'zsh'
+        run: ./bin/shelltone-benchmark 20

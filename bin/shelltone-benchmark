@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+iterations=${1:-50}
+case $iterations in *[!0-9]*|'') printf '%s\n' 'usage: shelltone-benchmark [iterations]' >&2; exit 2;; esac
+
+python3 - "$root" "$iterations" <<'PY'
+import subprocess, sys, time
+root, iterations = sys.argv[1], int(sys.argv[2])
+for shell, command in (
+    ("zsh", f'SHELLTONE_CONFIG=/dev/null; source {root}/shelltone.zsh; SHELLTONE_GIT_ASYNC=false; repeat {iterations} {{ _shelltone_set_prompt }}'),
+    ("bash", f'SHELLTONE_CONFIG=/dev/null; source {root}/shelltone.bash; SHELLTONE_GIT_ASYNC=false; for ((i=0;i<{iterations};i++)); do _shelltone_bash_precmd; done'),
+):
+    args = [shell, "-f", "-c", command] if shell == "zsh" else [shell, "--noprofile", "--norc", "-c", command]
+    start = time.perf_counter()
+    subprocess.run(args, cwd=root, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    elapsed = (time.perf_counter() - start) * 1000 / iterations
+    print(f"{shell}: {elapsed:.2f} ms/redraw ({iterations} iterations, {root})")
+PY

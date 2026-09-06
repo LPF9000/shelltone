@@ -1,56 +1,32 @@
-# Shelltone theme plan
+# Shelltone roadmap
 
-Shelltone stays small on purpose. A theme should feel like a considered prompt, not a pile of unrelated status widgets.
+Shelltone is a small, colorful Bash and Zsh prompt. Its three curated design paths are **Signal** (Powerlevel10k-inspired), **Still** (Pure-inspired), and **Contour** (Purity-inspired). The six palettes available in Custom are **Tenfold**, **Afterglow**, **Night Shift**, **Northstar**, **Harbor**, and **Sunset Strip**. Layouts and palettes stay separate so a custom choice does not require a new prompt engine.
 
-## Available now
+## Complete
 
-- **Tenfold** — the bright, framed, two-line signature look. Its name is a wink at the family of big-number prompt themes without borrowing their implementation.
-- **Afterglow** — magenta, peach, and cyan for a late-night terminal.
-- **Night Shift** — cool blues and restrained contrast for long sessions.
+- Cross-shell rendering with shared shell assignments and four layouts: frame, pure, zen, and blocks.
+- Curated design paths and six selectable palettes, with compact and two-line previews.
+- Git branch, upstream and push movement, dirty counts, conflicts, stashes, and operation labels where the selected path supports them.
+- Asynchronous Git refresh in interactive shells, a synchronous fallback, and controls for untracked-file scanning and Git visibility.
+- Preset-specific paths: full home-relative paths for Still, basename paths for Contour, and lightweight parent abbreviation for Signal.
+- Safe reloads, isolated preview shells, immediate configuration application, repeated-source handling, and preserved third-party highlighting.
+- Oh My Zsh/plugin-manager loading through `shelltone.plugin.zsh`.
+- Bash and Zsh smoke checks plus interactive lifecycle, compatibility, and display-width regression checks.
 
-The setup wizard begins with these choices, previews the selected palette, then asks about line height, spacing, and clock format. Noninteractive setup uses `shelltone configure --theme NAME --preset classic|compact`.
+## Next milestone
 
-Every theme should show Git state with a shared vocabulary: `⇣` and `⇡` for upstream movement, `⇠` and `⇢` for push movement, `+` for staged files, `!` for changed files, and `?` for untracked files. Each marker must have a distinct, palette-fitting color.
+- Expand the documentation reference and troubleshooting guide as integrations are tested.
+- Add deterministic ANSI/SVG visual snapshots for the three curated paths and representative custom layouts.
+- Generate fixed-font PNG previews as review artifacts when ImageMagick is available; keep raster output out of pass/fail comparisons.
+- Add compatibility checks for prompt ownership, repeated loading, existing hooks, and Oh My Zsh loading order.
+- Add a small benchmark covering clean directories, normal repositories, and large Git worktrees.
+- Test ordinary unpatched monospace fonts and narrow terminals for alignment and glyph fallback issues.
 
-## Next themes
+## Deferred
 
-- Cross-shell rendering and shared, portable theme configuration are in place.
-- Optional alias packs are available without changing a shell unless explicitly enabled.
-- Checks run against both supported shells and validate every included theme.
+- A `shelltone doctor` command.
+- Automatic remote fetching from the prompt.
+- A broad module catalog for language versions, cloud contexts, and other dashboards.
+- New palettes until an existing design path needs one.
 
-## Next refinements
-
-- Add an optional, clearly labeled abbreviated-directory mode for deep paths.
-- Add a Figlet-style, slanted Shelltone banner for the first-run experience and installer, with a compact plain-text fallback for narrow terminals.
-- Add theme screenshots generated from the sandbox for visual regression review.
-
-## Prompt compatibility hardening
-
-Use the established prompt ecosystems as a continuing review set before expanding Shelltone behavior:
-
-- **State isolation:** every theme and layout must explicitly establish its full rendering state, so switching paths in a live shell cannot retain a previous path's colors, Git format, prompt symbol, or syntax treatment.
-- **Sandbox isolation:** `try-shelltone` must copy all writable configuration and history into its temporary directory. Add regression coverage proving that a configure session cannot alter the source configuration.
-- **Immediate application:** `shelltone configure` must redraw the selected prompt in the current shell without requiring a manual reload. Exercise transitions between every curated path and Custom in both Bash and Zsh checks.
-- **Graceful integration:** document source ordering for Oh My Zsh and other prompt frameworks, detect incompatible prompt ownership where practical, and degrade optional integrations to an empty segment instead of failing.
-- **Terminal capability fallbacks:** keep ordinary Unicode as the baseline; test narrow terminals, non-TTY setup, limited color support, and missing optional shell facilities.
-- **Responsive Git state:** profile prompt redraws in large repositories, cache or defer expensive Git work, and retain a fast synchronous fallback when asynchronous work is unavailable.
-- **Visual contracts:** preserve snapshot-like ANSI previews for every numbered wizard choice and add scenario checks for colors, prompt symbol state, bar treatment, and right-edge behavior.
-
-## Prompt styles
-
-Palette themes and prompt styles are deliberately separate. A palette controls color; a style controls the bar, frames, dividers, fades, clock treatment, and prompt glyph. The initial set is **frame**, **pure**, **zen**, and **blocks**. Future styles should stay font-independent and should be recognizable at a glance without copying another prompt's exact composition.
-
-## Artwork follow-up
-
-The current README banner deliberately uses the original full-color PNG. The first SVG experiment retained the letter shapes but flattened the cyan, red, cream, gradient, and scanline treatment into one color, so it is not suitable as the project mark. Revisit vector artwork only with a workflow that preserves those color layers and effects; until then, the PNG is the canonical banner.
-
-## Repository history cleanup
-
-Remove retired product names and upstream attributions from every reachable repository surface: files, commit messages, branch names, tags, release notes, pull-request titles and bodies, discussion comments, and generated documentation.
-
-1. Inventory all reachable references and export a backup before any rewrite.
-2. Rewrite local history with a repeatable mapping, then verify that no retired terms remain in reachable revisions.
-3. Coordinate a protected-branch window, force-push the rewritten references, and update or replace affected review records.
-4. Ask every contributor to replace existing local clones; old clones can reintroduce retired history.
-
-Before a new theme lands, it needs a distinct palette, a compact and two-line preview, and a configuration path that works without a custom font. The names can nod to the prompt culture that inspired the look, but the design and implementation remain Shelltone's own.
+Every new behavior should remain optional, preserve a fast prompt path, work in both shells when practical, and include a compact and two-line validation case.
