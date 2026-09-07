@@ -43,6 +43,9 @@ jobs:
       - name: Check framework compatibility
         if: matrix.shell == 'zsh'
         run: ./tests/check-compat.sh
+      - name: Check terminal behavior
+        if: matrix.shell == 'zsh'
+        run: ./tests/check-terminal.sh
       - name: Check visual snapshots
         if: matrix.shell == 'zsh'
         run: ./tests/check-visual.sh

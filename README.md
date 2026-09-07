@@ -54,7 +54,7 @@ It previews the whole chosen design path before writing a config file. For a qui
 ./bin/shelltone configure --theme night-shift --style pure --preset compact
 ```
 
-By default this writes `config/shelltone.zsh`; pass `--output FILE` to keep a separate config. The settings are plain shell assignments and 256-color values, which makes new palettes and layouts easy to add, copy, and tune without learning a mini language. See [framework integration](./docs/integrations.md) for Oh My Zsh, Prezto, Antidote, Zinit, and plain-shell loading examples.
+By default this writes `config/shelltone.zsh`; pass `--output FILE` to keep a separate config. The settings are plain shell assignments and 256-color values, which makes new palettes and layouts easy to add, copy, and tune without learning a mini language. See the [configuration reference](./docs/configuration.md) and [framework integration](./docs/integrations.md) for settings, loading order, and troubleshooting.
 
 To enable it permanently, use the backup-first installer. It only appends a marked source line after confirmation and copies the startup file before changing it:
 
@@ -85,7 +85,7 @@ Still shows the home-relative path; Contour shows the current directory name. Si
 
 In Zsh, Signal and Still change the prompt symbol to `❮` when vi command mode is already enabled. Shelltone does not change editing key bindings. Set `SHELLTONE_TRANSIENT=true` to collapse submitted Zsh prompts to the prompt symbol; this is independent of blank-line spacing. The configuration command also accepts `--transient true`. Bash currently retains full previous prompts and its existing editing-mode behavior.
 
-For Oh My Zsh, set `ZSH_THEME=""` and source `shelltone.plugin.zsh` after loading Oh My Zsh, or link this checkout into `$ZSH_CUSTOM/plugins/shelltone` and add `shelltone` to the plugin list. Other managers can explicitly load the same plugin file. Enable only one prompt engine. Shelltone leaves syntax highlighting to your existing plugins; its optional custom highlighter is disabled by default and preserves other plugins' highlights.
+For Oh My Zsh, set `ZSH_THEME=""` and source `shelltone.plugin.zsh` after loading Oh My Zsh, or link this checkout into `$ZSH_CUSTOM/plugins/shelltone` and add `shelltone` to the plugin list. Other managers can explicitly load the same plugin file. Enable only one prompt engine. Still enables a small command-position highlighter for commands such as `cd`, `echo`, and `git`; it preserves highlights from other plugins. Set `SHELLTONE_SYNTAX_HIGHLIGHT=false` to disable it.
 
 The Bash renderer requires Bash 4.4 or newer. Rendering uses ordinary Unicode and 256-color terminal support; a patched font is not required. Font fallback and emoji width still depend on the terminal. The automated tests cover wide-character accounting in Zsh, not the appearance of every installed font.
 
@@ -107,6 +107,7 @@ Shelltone starts setup with a theme picker, then walks through that theme's layo
 
 - `shelltone.zsh` and `shelltone.bash` — small prompt engines behind the `shelltone` command.
 - `shelltone.plugin.zsh` — plugin-manager entry point for existing Zsh frameworks.
+- `docs/configuration.md` and `docs/integrations.md` — settings and framework recipes.
 - `config/shelltone.zsh` — the editable default theme configuration, shared by both shells.
 - `themes/` — portable palette definitions.
 - `shelltone-sandbox.zsh` and `shelltone-bash-sandbox.sh` — isolated child-shell startup logic.
@@ -116,6 +117,7 @@ Shelltone starts setup with a theme picker, then walks through that theme's layo
 - `bin/shelltone-configure` — configuration wizard and presets.
 - `tests/check.zsh` and `tests/check.bash` — syntax and behavior smoke checks.
 - `tests/check-compat.sh` — repeated-loading and existing-hook checks.
+- `tests/check-terminal.sh` — narrow-column and terminal capability checks.
 - `tests/check-visual.sh` — deterministic curated-path SVG snapshots with optional PNG rendering.
 - `bin/shelltone-benchmark` — local redraw timing for both shells.
 
@@ -126,6 +128,7 @@ Run the checks with:
 ./tests/check.zsh
 python3 tests/test-runtime.py -v
 ./tests/check-compat.sh
+./tests/check-terminal.sh
 ./tests/check-visual.sh
 ./bin/shelltone-benchmark
 ```

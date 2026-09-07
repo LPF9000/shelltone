@@ -11,16 +11,16 @@ Shelltone is a small, colorful Bash and Zsh prompt. Its three curated design pat
 - Preset-specific paths: full home-relative paths for Still, basename paths for Contour, and lightweight parent abbreviation for Signal.
 - Safe reloads, isolated preview shells, immediate configuration application, repeated-source handling, and preserved third-party highlighting.
 - Oh My Zsh/plugin-manager loading through `shelltone.plugin.zsh`.
-- Bash and Zsh smoke checks plus interactive lifecycle, compatibility, and display-width regression checks.
+- Bash and Zsh smoke checks plus interactive lifecycle, compatibility, narrow-terminal, visual, and display-width regression checks.
+- Configuration and framework integration references, deterministic SVG snapshots, and a three-context redraw benchmark.
 
 ## Next milestone
 
-- Expand the documentation reference and troubleshooting guide as integrations are tested.
-- Add deterministic ANSI/SVG visual snapshots for the three curated paths and representative custom layouts.
-- Generate fixed-font PNG previews as review artifacts when ImageMagick is available; keep raster output out of pass/fail comparisons.
-- Add compatibility checks for prompt ownership, repeated loading, existing hooks, and Oh My Zsh loading order.
-- Add a small benchmark covering clean directories, normal repositories, and large Git worktrees.
-- Test ordinary unpatched monospace fonts and narrow terminals for alignment and glyph fallback issues.
+- Expand visual snapshots to cover more palettes and custom layouts, including background treatment and right-edge spacing.
+- Add review artifacts rendered with a fixed ordinary monospace font when ImageMagick is available.
+- Test real framework installations periodically in addition to the isolated loading harness.
+- Compare benchmark results across platforms and shell versions.
+- Test ordinary unpatched monospace fonts manually for glyph fallback issues.
 
 ## Deferred
 
