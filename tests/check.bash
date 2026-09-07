@@ -95,11 +95,12 @@ source "$scratch/preview.sh"
 preview_output=$(printf '2\n' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 source "$scratch/preview.sh"
 [[ $SHELLTONE_DESIGN_PATH == still && $SHELLTONE_THEME == still && $SHELLTONE_PROMPT_STYLE == pure ]]
-[[ $SHELLTONE_DIR_FG == 81 && $SHELLTONE_GIT_CLEAN_FG == 250 && $SHELLTONE_GIT_AHEAD_FG == 159 && $SHELLTONE_DURATION_FG == 3 && $SHELLTONE_STATUS_OK_FG == 205 && $SHELLTONE_STATUS_ERROR_FG == 203 && $SHELLTONE_GIT_LABEL_STYLE == standard ]]
+[[ $SHELLTONE_DIR_FG == 87 && $SHELLTONE_GIT_CLEAN_FG == 250 && $SHELLTONE_GIT_AHEAD_FG == 159 && $SHELLTONE_DURATION_FG == 3 && $SHELLTONE_STATUS_OK_FG == 205 && $SHELLTONE_STATUS_ERROR_FG == 203 && $SHELLTONE_GIT_LABEL_STYLE == standard ]]
 
 source "$root/themes/contour.sh"
 source "$root/layouts/zen.sh"
 [[ $SHELLTONE_GIT_LABEL_STYLE == purity && $SHELLTONE_SHOW_GIT_ICON == false ]]
+[[ $SHELLTONE_PROMPT_SUCCESS_FG == 106 && $SHELLTONE_PROMPT_BOLD == true && $SHELLTONE_INPUT_FG == 250 && $SHELLTONE_GIT_PREFIX_FG == 79 && $SHELLTONE_GIT_BRANCH_FG == 179 ]]
 source "$scratch/preview.sh"
 [[ $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == false && $SHELLTONE_GIT_DETAIL == false ]]
 
@@ -118,7 +119,7 @@ done
 SHELLTONE_CONFIG="$scratch/active.sh"
 export -n SHELLTONE_CONFIG
 shelltone configure --theme still --style pure --preset compact >/dev/null
-[[ $SHELLTONE_THEME == still && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
+[[ $SHELLTONE_THEME == still && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SYNTAX_HIGHLIGHT == true ]]
 shelltone configure --theme tenfold --style frame --preset compact >/dev/null
 [[ $SHELLTONE_THEME == tenfold && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == true && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
 shelltone configure --theme harbor --preset compact >/dev/null

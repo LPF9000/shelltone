@@ -85,7 +85,7 @@ Still shows the home-relative path; Contour shows the current directory name. Si
 
 In Zsh, Signal and Still change the prompt symbol to `❮` when vi command mode is already enabled. Shelltone does not change editing key bindings. Set `SHELLTONE_TRANSIENT=true` to collapse submitted Zsh prompts to the prompt symbol; this is independent of blank-line spacing. The configuration command also accepts `--transient true`. Bash currently retains full previous prompts and its existing editing-mode behavior.
 
-For Oh My Zsh, set `ZSH_THEME=""` and source `shelltone.plugin.zsh` after loading Oh My Zsh, or link this checkout into `$ZSH_CUSTOM/plugins/shelltone` and add `shelltone` to the plugin list. Other managers can explicitly load the same plugin file. Enable only one prompt engine. Shelltone leaves syntax highlighting to your existing plugins; its optional custom highlighter is disabled by default and preserves other plugins' highlights.
+For Oh My Zsh, set `ZSH_THEME=""` and source `shelltone.plugin.zsh` after loading Oh My Zsh, or link this checkout into `$ZSH_CUSTOM/plugins/shelltone` and add `shelltone` to the plugin list. Other managers can explicitly load the same plugin file. Enable only one prompt engine. Still enables a small command-position highlighter for commands such as `cd`, `echo`, and `git`; it preserves highlights from other plugins. Set `SHELLTONE_SYNTAX_HIGHLIGHT=false` to disable it.
 
 The Bash renderer requires Bash 4.4 or newer. Rendering uses ordinary Unicode and 256-color terminal support; a patched font is not required. Font fallback and emoji width still depend on the terminal. The automated tests cover wide-character accounting in Zsh, not the appearance of every installed font.
 

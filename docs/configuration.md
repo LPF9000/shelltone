@@ -33,8 +33,10 @@ The curated design paths are `signal`, `still`, and `contour`. Custom configurat
 | `SHELLTONE_GIT_UNTRACKED` | `true` | Include untracked files in Git state. |
 | `SHELLTONE_SHOW_GIT` | `true` | Enable Git collection. |
 | `SHELLTONE_TRANSIENT` | `false` | Collapse submitted Zsh prompts to the prompt symbol. |
+| `SHELLTONE_SYNTAX_HIGHLIGHT` | `false` | Highlight known command positions in Still; other paths leave it disabled. |
+| `SHELLTONE_INPUT_FG` | unset | Optional foreground color used for typed command text. |
 
-Set values after loading the selected palette and layout. `SHELLTONE_TRANSIENT` and vi-mode prompt symbols are Zsh behavior; Bash retains its normal line editing behavior.
+Set values after loading the selected palette and layout. `SHELLTONE_TRANSIENT`, vi-mode prompt symbols, and command-position highlighting are Zsh behavior; Bash retains its normal line editing behavior.
 
 ## Git vocabulary
 

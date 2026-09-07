@@ -120,6 +120,9 @@ local preview_output
 preview_output=$(print '4\n2\n1\n1\n2\n1\n1\n1\n1' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
 [[ $preview_output == *$'\e[38;5;87m>⎇ main '* ]]
 [[ $preview_output == *'DESIGN PATH'* && $preview_output == *'BAR TREATMENT'* && $preview_output == *'BAR SHADE'* ]]
+local contour_preview_output
+contour_preview_output=$(print '3' | "$root/bin/shelltone-configure" --output "$scratch/preview.sh")
+[[ $contour_preview_output == *'38;5;106m'* && $contour_preview_output == *'1m'* && $contour_preview_output == *'❯'* ]]
 [[ $(grep -c 'LIVE PREVIEW' <<< "$preview_output") -ge 14 ]]
 [[ $preview_output == *'YOUR CHOICE'* && $preview_output == *'› '* ]]
 ! grep -q 'civis' "$root/bin/shelltone-configure"
@@ -135,13 +138,25 @@ preview_output=$(print '2' | "$root/bin/shelltone-configure" --output "$scratch/
 source "$scratch/preview.sh"
 [[ $SHELLTONE_DESIGN_PATH == still && $SHELLTONE_THEME == still && $SHELLTONE_PROMPT_STYLE == pure ]]
 [[ $SHELLTONE_SHOW_BAR == false && $SHELLTONE_SHOW_TIME == false && $SHELLTONE_SHOW_STATUS == false && $SHELLTONE_SHOW_DURATION == true ]]
-[[ $SHELLTONE_DIR_FG == 81 && $SHELLTONE_GIT_CLEAN_FG == 250 && $SHELLTONE_GIT_AHEAD_FG == 159 && $SHELLTONE_DURATION_FG == 3 && $SHELLTONE_STATUS_OK_FG == 205 && $SHELLTONE_STATUS_ERROR_FG == 203 && $SHELLTONE_GIT_LABEL_STYLE == standard ]]
-[[ $SHELLTONE_GIT_DETAIL == false && $SHELLTONE_PROMPT_SUCCESS_FG == 205 && $SHELLTONE_PROMPT_ERROR_FG == 203 && $SHELLTONE_SYNTAX_HIGHLIGHT == false && $SHELLTONE_COMMAND_FG == 121 ]]
+[[ $SHELLTONE_DIR_FG == 87 && $SHELLTONE_GIT_CLEAN_FG == 250 && $SHELLTONE_GIT_AHEAD_FG == 159 && $SHELLTONE_DURATION_FG == 3 && $SHELLTONE_STATUS_OK_FG == 205 && $SHELLTONE_STATUS_ERROR_FG == 203 && $SHELLTONE_GIT_LABEL_STYLE == standard ]]
+[[ $SHELLTONE_GIT_DETAIL == false && $SHELLTONE_PROMPT_SUCCESS_FG == 205 && $SHELLTONE_PROMPT_ERROR_FG == 203 && $SHELLTONE_SYNTAX_HIGHLIGHT == true && $SHELLTONE_COMMAND_FG == 121 ]]
+
+source "$root/themes/still.sh"
+source "$root/layouts/pure.sh"
+[[ $SHELLTONE_DIR_FG == 87 && $SHELLTONE_SYNTAX_HIGHLIGHT == true ]]
+BUFFER='cd /tmp'
+region_highlight=()
+_shelltone_syntax_highlight
+[[ ${region_highlight[1]} == *'fg=121,bold'* ]]
 
 # Theme reloads must clear identity settings from the previously selected path.
 source "$root/themes/contour.sh"
 source "$root/layouts/zen.sh"
 [[ $SHELLTONE_GIT_LABEL_STYLE == purity && $SHELLTONE_SHOW_GIT_ICON == false ]]
+[[ $SHELLTONE_PROMPT_SUCCESS_FG == 106 && $SHELLTONE_PROMPT_BOLD == true && $SHELLTONE_INPUT_FG == 250 && $SHELLTONE_GIT_PREFIX_FG == 79 && $SHELLTONE_GIT_BRANCH_FG == 179 ]]
+_shelltone_last_status=0
+_shelltone_set_prompt
+[[ $PROMPT == *"${_shelltone_bold}${SHELLTONE_PROMPT_SYMBOL}${_shelltone_bold_reset}"* ]]
 source "$scratch/preview.sh"
 [[ $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == false && $SHELLTONE_GIT_DETAIL == false ]]
 
@@ -153,7 +168,7 @@ source "$generated"
 SHELLTONE_CONFIG="$scratch/active.sh"
 typeset +x SHELLTONE_CONFIG
 shelltone configure --theme still --style pure --preset compact >/dev/null
-[[ $SHELLTONE_THEME == still && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
+[[ $SHELLTONE_THEME == still && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SYNTAX_HIGHLIGHT == true ]]
 shelltone configure --theme tenfold --style frame --preset compact >/dev/null
 [[ $SHELLTONE_THEME == tenfold && $SHELLTONE_GIT_LABEL_STYLE == standard && $SHELLTONE_SHOW_GIT_ICON == true && $SHELLTONE_SYNTAX_HIGHLIGHT == false ]]
 shelltone configure --theme harbor --preset compact >/dev/null

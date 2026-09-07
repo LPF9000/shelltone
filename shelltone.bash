@@ -66,6 +66,8 @@ export SHELLTONE_CONFIG=${SHELLTONE_CONFIG:-$SHELLTONE_ROOT/config/shelltone.zsh
 : "${SHELLTONE_DURATION_FG:=248}"
 : "${SHELLTONE_PROMPT_SUCCESS_FG:=76}"
 : "${SHELLTONE_PROMPT_ERROR_FG:=196}"
+: "${SHELLTONE_PROMPT_BOLD:=false}"
+: "${SHELLTONE_INPUT_FG:=}"
 : "${SHELLTONE_VENV_ICON:=🐍}"
 
 _shelltone_bash_reset=$'\001\e[0m\002'
@@ -239,7 +241,12 @@ _shelltone_bash_precmd() {
   _shelltone_bash_fg "$symbol_fg"
   SHELLTONE_BASH_INPUT="$REPLY"
   [[ $SHELLTONE_TWO_LINES != true ]] || SHELLTONE_BASH_INPUT+="$SHELLTONE_INPUT_PREFIX "
+  [[ $SHELLTONE_PROMPT_BOLD == true ]] && SHELLTONE_BASH_INPUT+=$'\e[1m'
   SHELLTONE_BASH_INPUT+="$SHELLTONE_PROMPT_SYMBOL${_shelltone_bash_reset} "
+  if [[ -n $SHELLTONE_INPUT_FG ]]; then
+    _shelltone_bash_fg "$SHELLTONE_INPUT_FG"
+    SHELLTONE_BASH_INPUT+="$REPLY"
+  fi
   # Expand data once through these variables, so names are never shell code.
   PS1=''
   [[ $SHELLTONE_ADD_NEWLINE != true ]] || PS1='\n'

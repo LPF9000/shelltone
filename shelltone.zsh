@@ -90,6 +90,8 @@ source "$SHELLTONE_ROOT/shelltone-core.sh"
 : ${SHELLTONE_STATUS_ERROR_FG:=160}
 : ${SHELLTONE_PROMPT_SUCCESS_FG:=76}
 : ${SHELLTONE_PROMPT_ERROR_FG:=196}
+: ${SHELLTONE_PROMPT_BOLD:=false}
+: ${SHELLTONE_INPUT_FG:=}
 : ${SHELLTONE_SYNTAX_HIGHLIGHT:=false}
 : ${SHELLTONE_COMMAND_FG:=76}
 
@@ -422,6 +424,8 @@ function _shelltone_display_width() {
 function _shelltone_set_prompt() {
   local left right prefix gap gap_text left_width right_width
   local symbol=$SHELLTONE_PROMPT_SYMBOL
+  local symbol_bold=''
+  _shelltone_bool "$SHELLTONE_PROMPT_BOLD" && symbol_bold=$_shelltone_bold
   if _shelltone_bool "$SHELLTONE_VI_MODE" && [[ ${KEYMAP-} == vicmd ]]; then symbol=❮; fi
   (( COLUMNS > 0 )) || COLUMNS=80
   RPROMPT=
@@ -471,20 +475,20 @@ function _shelltone_set_prompt() {
     fi
     PROMPT+=$'\n'
     if (( _shelltone_last_status == 0 )); then
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${symbol}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${symbol_bold}${symbol}${_shelltone_bold_reset}${_shelltone_fg_reset} "
     else
-      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${symbol}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_FRAME_COLOR}m%}${SHELLTONE_INPUT_PREFIX}${_shelltone_fg_reset} ${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${symbol_bold}${symbol}${_shelltone_bold_reset}${_shelltone_fg_reset} "
     fi
   else
     PROMPT=''
     _shelltone_bool "$SHELLTONE_ADD_NEWLINE" && PROMPT+=$'\n'
     PROMPT+="${left} "
     (( _shelltone_last_status == 0 )) &&
-      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${symbol}${_shelltone_fg_reset} " ||
-      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${symbol}${_shelltone_fg_reset} "
+      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_SUCCESS_FG}m%}${symbol_bold}${symbol}${_shelltone_bold_reset}${_shelltone_fg_reset} " ||
+      PROMPT+="${_shelltone_fg}${SHELLTONE_PROMPT_ERROR_FG}m%}${symbol_bold}${symbol}${_shelltone_bold_reset}${_shelltone_fg_reset} "
     RPROMPT=$right
   fi
-  PROMPT+="${_shelltone_bg_reset}${_shelltone_fg_reset}"
+  [[ -n ${SHELLTONE_INPUT_FG-} ]] && PROMPT+="${_shelltone_bg_reset}${_shelltone_fg_reset}${_shelltone_fg}${SHELLTONE_INPUT_FG}m%}" || PROMPT+="${_shelltone_bg_reset}${_shelltone_fg_reset}"
 }
 
 function _shelltone_keymap() {
